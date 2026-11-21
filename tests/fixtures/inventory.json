@@ -1,0 +1,2540 @@
+{
+  "schema": 2,
+  "site": {
+    "name": "Example House",
+    "subnet": "10.20.0.0/24",
+    "gateway": "10.20.0.1",
+    "surveyedAt": "2026-11-20",
+    "layout": "One flat. Bedroom across the top; Home Office and Hallway beneath it; Bathroom off the Hallway; Living Room and Kitchen along the bottom. (From the household dashboard's floor plan, traced from the Omni E28's map.)",
+    "ssid": "HomeNet"
+  },
+  "_evidence": "verified values: live = probed on 2026-11-20 from the Mac mini (system_profiler, ioreg, ping sweep, mDNS, cast/Hue/CoAP local APIs, Home Assistant, and the ASUS router's own client list, DHCP leases and ARP table read over its admin shell, read-only); plan = drawn in the wiring blueprint, not yet confirmed; reported = Alex said so or it is on an order email. Never upgrade plan/reported to live without a probe. A model is stated only when a probe or an order email shows it; everything else is a candidate under identity.candidates. MAC vendor names come from the IEEE prefix table (first three bytes).",
+  "zones": [
+    {
+      "id": "desk",
+      "name": "Desk",
+      "note": "Home office, on the desk",
+      "room": "office"
+    },
+    {
+      "id": "rack",
+      "name": "Network shelf",
+      "note": "Home office, under the desk or on the shelf",
+      "room": "office"
+    },
+    {
+      "id": "spares",
+      "name": "Spares drawer",
+      "note": "Owned, not wired in",
+      "room": "office"
+    },
+    {
+      "id": "office",
+      "name": "Home office",
+      "room": "office",
+      "note": "Elsewhere in the home office"
+    },
+    {
+      "id": "living-wired",
+      "name": "TV corner",
+      "room": "living",
+      "note": "Living room: modem, main router, Hue Bridge and TV"
+    },
+    {
+      "id": "living",
+      "name": "Living room",
+      "room": "living"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "room": "kitchen"
+    },
+    {
+      "id": "bedroom",
+      "name": "Bedroom",
+      "room": "bedroom"
+    },
+    {
+      "id": "bathroom",
+      "name": "Bathroom",
+      "room": "bathroom"
+    },
+    {
+      "id": "hallway",
+      "name": "Hallway",
+      "room": "hallway"
+    },
+    {
+      "id": "unplaced",
+      "name": "Unplaced",
+      "note": "On the network, room not known"
+    },
+    {
+      "id": "outside",
+      "name": "Outside",
+      "note": "Beyond the house: the provider's network and the internet"
+    }
+  ],
+  "devices": [
+    {
+      "id": "mac-mini",
+      "name": "Mac mini",
+      "kind": "computer",
+      "vendor": "Apple",
+      "model": "Mac mini M4 Pro (Mac16,11), 24 GB, 512 GB",
+      "zone": "desk",
+      "role": "Main machine. Runs this monitor, Home Assistant (Docker) and the household dashboard.",
+      "verified": "live",
+      "net": [
+        {
+          "if": "en8",
+          "via": "adapter-ugreen-25g",
+          "ip": "10.20.0.140",
+          "medium": "ethernet",
+          "linkSpeed": "2.5G",
+          "verified": "live",
+          "mac": "EC:1A:C3:0F:1E:FD",
+          "macVendor": "Ugreen Group Limited",
+          "note": "The MAC is the adapter's. The router lists it as a wired client of the office mesh node."
+        },
+        {
+          "if": "en1",
+          "ip": "10.20.0.126",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "76:E2:36:69:4A:D3",
+          "randomizedMac": true,
+          "ssid": "HomeNet",
+          "ap": "node-xt8",
+          "band": "5 GHz",
+          "rssi": -40,
+          "apBasis": "router client list, 2026-11-20",
+          "note": "Private Wi-Fi address. Channel 36, 80 MHz, 802.11ax."
+        },
+        {
+          "if": "en0",
+          "medium": "ethernet",
+          "note": "Built-in port, 1 Gb/s max (Broadcom 57762), nothing plugged in",
+          "verified": "live"
+        },
+        {
+          "if": "tailscale",
+          "ip": "100.64.0.10",
+          "name": "alex-macmini",
+          "verified": "live"
+        },
+        {
+          "medium": "bluetooth",
+          "mac": "D0:11:E5:A4:43:64",
+          "name": "Bluetooth controller (BCM4388)",
+          "verified": "live",
+          "note": "Host for the keyboard and mouse. Paired, not connected at the probe: Bose QC45, two sets of AirPods, Alex's Apple Watch, Alex's MacBook Pro, the work MacBook, SamsPhone."
+        }
+      ],
+      "facts": {
+        "chip": "Apple M4 Pro, 12 cores (8P + 4E), 16-core GPU",
+        "memory": "24 GB",
+        "builtInEthernet": "1 Gb/s (this unit is not the 10G option)",
+        "serviceOrder": "Ethernet, USB 2.5G LAN, Thunderbolt Bridge, Wi-Fi",
+        "displayMode": "Odyssey G70B at 3840x2160, HiDPI looks like 1920x1080 @ 60 Hz",
+        "bought": "Proshop.nl, 2022-06-10",
+        "usbBuses": "The three rear Thunderbolt ports are separate USB buses: the 2.5G adapter, the KVM's hub and the USB microphone each sit on one. The two front USB-C ports hang off Apple's built-in hubs and have nothing plugged in. Which rear socket is which bus is not confirmed (ioreg, 2026-11-20).",
+        "thunderbolt": "No Thunderbolt or USB4 device on any of the three ports; everything attached is plain USB or DisplayPort alt mode."
+      },
+      "ports": [
+        {
+          "id": "tb-1",
+          "label": "Thunderbolt 5 (rear 1)",
+          "type": "usb-c"
+        },
+        {
+          "id": "tb-2",
+          "label": "Thunderbolt 5 (rear 2)",
+          "type": "usb-c"
+        },
+        {
+          "id": "tb-3",
+          "label": "Thunderbolt 5 (rear 3)",
+          "type": "usb-c"
+        },
+        {
+          "id": "eth",
+          "label": "Ethernet (1G)",
+          "type": "rj45"
+        },
+        {
+          "id": "hdmi",
+          "label": "HDMI",
+          "type": "hdmi"
+        },
+        {
+          "id": "usbc-f1",
+          "label": "USB-C (front 1)",
+          "type": "usb-c"
+        },
+        {
+          "id": "usbc-f2",
+          "label": "USB-C (front 2)",
+          "type": "usb-c"
+        }
+      ],
+      "probe": {
+        "type": "self"
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the home office"
+      }
+    },
+    {
+      "id": "macbook-work",
+      "name": "Work MacBook Pro",
+      "kind": "computer",
+      "vendor": "Apple",
+      "model": "MacBook Pro (exact model not confirmed)",
+      "zone": "desk",
+      "role": "Employer-managed work laptop. Not ours to administer.",
+      "verified": "reported",
+      "net": [
+        {
+          "name": "MACM-EXAMPLE01",
+          "ip": "10.20.0.182",
+          "medium": "wifi",
+          "mac": "1A:ED:1D:45:90:1F",
+          "randomizedMac": true,
+          "ap": "node-xt8",
+          "band": "5 GHz-2",
+          "rssi": -44,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live",
+          "note": "MACM-EXAMPLE01.local resolves to this address by mDNS; the router calls the host Mac."
+        },
+        {
+          "name": "MACM-EXAMPLE01",
+          "ip": "10.20.0.43",
+          "medium": "ethernet",
+          "mac": "A0:CE:C8:0F:B8:B8",
+          "macVendor": "Ce Link Limited",
+          "via": "hub-arcdock",
+          "verified": "live",
+          "note": "The router gave this lease to a wired CE-Link Ethernet chip announcing the laptop's name about an hour before the probe (20:43). At the probe the address did not answer and the MAC was not in the router's wired list: the dock was unplugged or asleep. That the CE-Link chip is the ArcDock is likely, not confirmed."
+        },
+        {
+          "medium": "bluetooth",
+          "mac": "D2:71:16:0E:32:F8",
+          "pairedWith": "mac-mini",
+          "connected": false,
+          "verified": "live",
+          "note": "Listed as a known Bluetooth device on the Mac mini (Apple Continuity), not connected."
+        }
+      ],
+      "constraints": [
+        "Managed device: the fix agent must never run commands on it or change its settings; advice only.",
+        "A VPN or device policy may block local network access to the NAS even when wired."
+      ],
+      "ports": [
+        {
+          "id": "usbc-1",
+          "label": "USB-C / Thunderbolt",
+          "type": "usb-c"
+        }
+      ],
+      "probe": {
+        "type": "mdns",
+        "name": "MACM-EXAMPLE01"
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the home office"
+      },
+      "facts": {
+        "builtInMac": "7C:F3:4D:7A:74:CA (Apple), from its own _workstation advertisement",
+        "services": "Advertises Screen Sharing (_rfb) on the LAN",
+        "model": "The laptop does not advertise its model on the network. Not readable without touching it."
+      }
+    },
+    {
+      "id": "monitor-g70b",
+      "name": "Odyssey G70B",
+      "kind": "display",
+      "vendor": "Samsung",
+      "model": "Odyssey G70B 32-inch 4K (S32BG70x; the exact suffix is on the back label; built week 8 2022)",
+      "zone": "desk",
+      "role": "The one screen, shared through the KVM.",
+      "verified": "live",
+      "ports": [
+        {
+          "id": "hdmi-in",
+          "label": "HDMI in (which of the HDMI inputs is not confirmed)",
+          "type": "hdmi"
+        },
+        {
+          "id": "hdmi-2",
+          "label": "HDMI 2",
+          "type": "hdmi"
+        },
+        {
+          "id": "dp-in",
+          "label": "DisplayPort 1.4",
+          "type": "dp"
+        },
+        {
+          "id": "usb-up",
+          "label": "USB upstream",
+          "type": "usb-b"
+        }
+      ],
+      "probe": {
+        "type": "display",
+        "match": "Odyssey G70B"
+      },
+      "facts": {
+        "inputs": "2 HDMI 2.1 and 1 DisplayPort 1.4",
+        "limit": "The KVM caps the picture at 60 Hz; the panel does 144 Hz",
+        "size": "32-inch class: the panel reports an image area of 70 x 39 cm (702 x 389 mm), a 31.5 inch diagonal. The 28-inch model would report about 62 x 34 cm.",
+        "order": "A Shop B order of 2021-07-17 for a Samsung Odyssey G7 LS32BG700EUXEN was returned on 2021-08-27, so where this unit was bought is not known.",
+        "refresh": "The panel advertises up to 144 Hz; the Mac mini drives it at 60 Hz through the KVM"
+      }
+    },
+    {
+      "id": "kvm-ugreen",
+      "name": "UGREEN KVM",
+      "kind": "kvm",
+      "vendor": "UGREEN",
+      "model": "USB-C + HDMI KVM Switch, 2 in 1 out, 4K60, 4 USB 3.0 ports (3 A + 1 C). UGREEN's model number is not on the order; it is on the underside label.",
+      "zone": "desk",
+      "role": "Switches the monitor and the desk's USB devices between the Mac mini (PC1) and the MacBook (PC2). The keyboard and mouse are on Bluetooth and do not pass through it.",
+      "verified": "live",
+      "facts": {
+        "seenAs": "GenesysLogic USB2.1 hub (05e3:0610) and USB3.1 hub (05e3:0626) on the Mac mini",
+        "bought": "Shop A, 2022-11-21, EUR 89.00",
+        "downstream": "3 USB-A and 1 USB-C according to the listing; which position is the USB-C is not confirmed",
+        "downstreamNow": "Only the Stream Deck Neo is plugged into its USB ports (Mac mini USB tree, 2026-11-20)"
+      },
+      "rules": [
+        "Never route Ethernet through the KVM: the network would drop on every switch."
+      ],
+      "ports": [
+        {
+          "id": "pc1",
+          "label": "PC1 USB-C in",
+          "type": "usb-c"
+        },
+        {
+          "id": "pc2-hdmi",
+          "label": "PC2 HDMI in",
+          "type": "hdmi"
+        },
+        {
+          "id": "pc2-usb",
+          "label": "PC2 USB data in",
+          "type": "usb-c"
+        },
+        {
+          "id": "out",
+          "label": "HDMI out",
+          "type": "hdmi"
+        },
+        {
+          "id": "usb-1",
+          "label": "Front USB 1",
+          "type": "usb-a"
+        },
+        {
+          "id": "usb-2",
+          "label": "Front USB 2",
+          "type": "usb-a"
+        },
+        {
+          "id": "usb-3",
+          "label": "Front USB 3",
+          "type": "usb-a"
+        },
+        {
+          "id": "usb-4",
+          "label": "Front USB-C",
+          "type": "usb-c"
+        }
+      ],
+      "probe": {
+        "type": "usb",
+        "vendorId": "0x05e3",
+        "productId": "0x0610"
+      }
+    },
+    {
+      "id": "hub-arcdock",
+      "name": "Spigen ArcDock Pro",
+      "kind": "hub",
+      "vendor": "Spigen",
+      "model": "ArcDock Pro 6-in-1 (PD2302 per Alex; the order email does not print the code)",
+      "zone": "desk",
+      "role": "The MacBook's single-cable dock: video out, USB, 2.5GbE, charging.",
+      "verified": "reported",
+      "facts": {
+        "ports": "2 USB-C (one PD in, one data), 2 USB-A 10 Gb/s, HDMI, 2.5GbE",
+        "power": "100 W PD in, about 85 W to the laptop",
+        "source": "Shop A order of 2021-11-17, delivered 2021-12-28"
+      },
+      "ports": [
+        {
+          "id": "host",
+          "label": "USB-C to laptop",
+          "type": "usb-c"
+        },
+        {
+          "id": "pd-in",
+          "label": "USB-C PD in (100 W)",
+          "type": "usb-c"
+        },
+        {
+          "id": "usbc-data",
+          "label": "USB-C data",
+          "type": "usb-c"
+        },
+        {
+          "id": "usba-1",
+          "label": "USB-A 10 Gb/s (1)",
+          "type": "usb-a"
+        },
+        {
+          "id": "usba-2",
+          "label": "USB-A 10 Gb/s (2)",
+          "type": "usb-a"
+        },
+        {
+          "id": "hdmi",
+          "label": "HDMI out",
+          "type": "hdmi"
+        },
+        {
+          "id": "eth",
+          "label": "2.5GbE",
+          "type": "rj45"
+        }
+      ],
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "streamdeck-neo",
+      "name": "Stream Deck Neo",
+      "kind": "peripheral",
+      "vendor": "Elgato",
+      "model": "Stream Deck Neo",
+      "zone": "desk",
+      "verified": "live",
+      "facts": {
+        "seenAs": "USB 0fd9:009a at 480 Mb/s behind the KVM hub, drawing 500 mA",
+        "app": "Elgato Stream Deck.app is installed on the Mac mini",
+        "bought": "Shop A, 2022-10-11"
+      },
+      "ports": [
+        {
+          "id": "usb",
+          "label": "USB-C",
+          "type": "usb-c"
+        }
+      ],
+      "probe": {
+        "type": "usb",
+        "vendorId": "0x0fd9",
+        "productId": "0x009a"
+      }
+    },
+    {
+      "id": "streamdeck-mini",
+      "name": "Stream Deck Mini",
+      "kind": "peripheral",
+      "vendor": "Elgato",
+      "model": "Stream Deck Mini",
+      "zone": "spares",
+      "verified": "reported",
+      "facts": {
+        "bought": "Delivered 2022-08-31 according to the order email",
+        "note": "Not on the Mac mini's USB bus at survey time. Where it is plugged in, if anywhere, is not known."
+      },
+      "ports": [
+        {
+          "id": "usb",
+          "label": "USB",
+          "type": "usb-a"
+        }
+      ],
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "keyboard",
+      "name": "MX Keys",
+      "kind": "peripheral",
+      "vendor": "Logitech",
+      "model": "MX Keys (Bluetooth product 0xB35B, firmware MPK12.01_0013)",
+      "zone": "desk",
+      "verified": "live",
+      "ports": [
+        {
+          "id": "usb",
+          "label": "USB-C (charging)",
+          "type": "usb-c"
+        }
+      ],
+      "probe": {
+        "type": "bluetooth",
+        "mac": "E4:2A:0F:DC:29:C1",
+        "name": "MX Keys"
+      },
+      "role": "The desk keyboard. On Bluetooth to the Mac mini, not through the KVM.",
+      "net": [
+        {
+          "medium": "bluetooth",
+          "mac": "E4:2A:0F:DC:29:C1",
+          "host": "mac-mini",
+          "connected": true,
+          "verified": "live",
+          "note": "Bluetooth LE HID, battery 100% at the probe."
+        }
+      ],
+      "facts": {
+        "switching": "Three Easy-Switch keys, one host each. Switching the KVM does not move it: it stays on the Mac mini until its Easy-Switch key for another host is pressed.",
+        "workMacbook": "Whether the work MacBook is paired on one of the other two channels is not known."
+      }
+    },
+    {
+      "id": "mouse",
+      "name": "MX Master 3 for Mac",
+      "kind": "peripheral",
+      "vendor": "Logitech",
+      "model": "MX Master 3 for Mac (Bluetooth name MX Master 3 Mac, product 0xB023, firmware MPM19.01_0015)",
+      "zone": "desk",
+      "verified": "live",
+      "ports": [
+        {
+          "id": "usb",
+          "label": "USB-C (charging)",
+          "type": "usb-c"
+        }
+      ],
+      "probe": {
+        "type": "bluetooth",
+        "mac": "E0:3E:BB:B8:0B:25",
+        "name": "MX Master 3 Mac"
+      },
+      "role": "The desk mouse. On Bluetooth to the Mac mini, not through the KVM.",
+      "net": [
+        {
+          "medium": "bluetooth",
+          "mac": "E0:3E:BB:B8:0B:25",
+          "host": "mac-mini",
+          "connected": true,
+          "verified": "live",
+          "note": "Bluetooth LE HID, battery 100% at the probe."
+        }
+      ],
+      "facts": {
+        "switching": "Easy-Switch button underneath, three channels. Switching the KVM does not move it.",
+        "workMacbook": "Whether the work MacBook is paired on another channel is not known."
+      }
+    },
+    {
+      "id": "usb-audio",
+      "name": "USB microphone",
+      "kind": "peripheral",
+      "vendor": "C-Media (as the chip names itself)",
+      "model": "USB PnP Sound Device (08bb:2902), one input channel, no output: a microphone. Likely the DUNGZDUZ USB-C mini microphone ordered on 2022-04-30.",
+      "zone": "desk",
+      "verified": "live",
+      "facts": {
+        "note": "Plugged into a rear Thunderbolt port of the Mac mini, on its own USB bus, not through the KVM. It is the Mac's default input device.",
+        "candidate": "DUNGZDUZ USB-C mini microphone for Mac mini M4, Shop A, 2022-04-30. The match rests on it being the only USB microphone in the order mail; not confirmed.",
+        "usbId": "Vendor id 08bb belongs to Texas Instruments (PCM2902 codec) in the public USB id list, while the device calls itself C-Media: a common clone chip."
+      },
+      "ports": [
+        {
+          "id": "usb",
+          "label": "USB-C plug",
+          "type": "usb-c"
+        }
+      ],
+      "probe": {
+        "type": "usb",
+        "vendorId": "0x08bb",
+        "productId": "0x2902"
+      }
+    },
+    {
+      "id": "adapter-ugreen-25g",
+      "name": "UGREEN 2.5G adapter",
+      "kind": "adapter",
+      "vendor": "UGREEN",
+      "model": "USB-C to 2.5G Ethernet adapter (Realtek RTL8156, 0bda:8156)",
+      "zone": "desk",
+      "role": "Gives the Mac mini 2.5 Gb/s to the switch.",
+      "verified": "live",
+      "facts": {
+        "link": "2500Base-T full duplex on en8",
+        "usbLink": "5 Gb/s",
+        "bought": "Shop A, 2022-11-21, EUR 29.99, inside the 30-day return window",
+        "mac": "EC:1A:C3:0F:1E:FD (Ugreen Group Limited)",
+        "orderTitle": "UGREEN USB C 2.5G LAN Adapter (Shop A, 2022-11-21); the UGREEN model code is not on the order",
+        "seenByRouter": "Wired client of the office mesh node"
+      },
+      "ports": [
+        {
+          "id": "usbc",
+          "label": "USB-C",
+          "type": "usb-c"
+        },
+        {
+          "id": "eth",
+          "label": "2.5GbE",
+          "type": "rj45"
+        }
+      ],
+      "probe": {
+        "type": "interface",
+        "if": "en8"
+      }
+    },
+    {
+      "id": "switch-sg105m2",
+      "name": "TP-Link 2.5G switch",
+      "kind": "switch",
+      "vendor": "TP-Link",
+      "model": "TL-SG105-M2 (5 x 2.5G, unmanaged)",
+      "zone": "rack",
+      "role": "The wired core. Mac to NAS traffic stays inside it.",
+      "verified": "reported",
+      "facts": {
+        "note": "Unmanaged: no address, cannot be probed. Its health is inferred from the links through it.",
+        "bought": "Shop A, 2022-11-21, about EUR 64.50",
+        "seenByRouter": "The office mesh node lists a wired TP-Link MAC with no IP address (20:E1:5D:AE:8B:07) next to the NAS and the Mac mini's adapter. It is likely this switch; not confirmed."
+      },
+      "ports": [
+        {
+          "id": "p1",
+          "label": "P1",
+          "type": "rj45"
+        },
+        {
+          "id": "p2",
+          "label": "P2",
+          "type": "rj45"
+        },
+        {
+          "id": "p3",
+          "label": "P3",
+          "type": "rj45"
+        },
+        {
+          "id": "p4",
+          "label": "P4",
+          "type": "rj45"
+        },
+        {
+          "id": "p5",
+          "label": "P5 (spare)",
+          "type": "rj45"
+        }
+      ],
+      "probe": {
+        "type": "inferred",
+        "from": [
+          "l-adapter-switch",
+          "l-nas-switch"
+        ]
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the home office"
+      }
+    },
+    {
+      "id": "modem-cableco",
+      "name": "CableCo modem",
+      "kind": "modem",
+      "vendor": "CableCo",
+      "model": "CableCo cable modem in bridge mode (model not confirmed; it is on the label)",
+      "zone": "living-wired",
+      "role": "The internet connection. Everything leaves the house through it.",
+      "verified": "live",
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the living room"
+      },
+      "net": [
+        {
+          "ip": "192.168.100.1",
+          "note": "Answers ping and serves the modem's status page at this address, the management address of a cable modem in bridge mode.",
+          "verified": "live"
+        }
+      ],
+      "facts": {
+        "mode": "Bridge mode: the ASUS router's WAN port holds a public CableCo address by DHCP (router settings, 2026-11-20), so the modem does no routing.",
+        "ui": "Its page is the Liberty Global web interface (lighttpd). The page's code names several models (Sagemcom F3896LG, Compal CH7465LG), so it does not settle which one this is."
+      },
+      "ports": [
+        {
+          "id": "coax",
+          "label": "Coax in",
+          "type": "coax"
+        },
+        {
+          "id": "lan-1",
+          "label": "LAN 1",
+          "type": "rj45"
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "192.168.100.1",
+        "tcp": 80
+      }
+    },
+    {
+      "id": "router-xt8",
+      "name": "ASUS ZenWiFi XT8 (router)",
+      "kind": "router",
+      "vendor": "ASUS",
+      "model": "ZenWiFi AX XT8 (ASUS product id RT-AX95Q)",
+      "zone": "living-wired",
+      "role": "Gateway, DHCP, DNS and main Wi-Fi node.",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.1",
+          "name": "ZenWiFi_XT8-7E50",
+          "verified": "live",
+          "mac": "FC:34:97:9E:7E:54",
+          "macVendor": "ASUSTek Computer Inc."
+        }
+      ],
+      "facts": {
+        "lan": "LAN ports are 1 Gb/s",
+        "admin": "http://10.20.0.1",
+        "firmware": "3.0.0.4.388_24854",
+        "mode": "Router mode. WAN by DHCP from CableCo (public address).",
+        "wifi": "SSID HomeNet on 2.4 GHz and 5 GHz-1 (channel 36, 80 MHz); 5 GHz-2 carries the mesh backhaul (SSID HomeNet-5G)",
+        "wired": "Wired clients: the Hue Bridge and the CableCo Mediabox",
+        "blocked": "The router's MAC filter blocks two devices: C2:EF:E0:55:B0:72 (announced itself as android-dhcp-12) and D2:6C:C3:BB:B4:F5 (HUAWEI_P30_Pro). Both are private addresses and neither is in the current client list.",
+        "openPorts": "22 (SSH), 53, 80, 8443 (admin), 9100 (USB print server), 49152 (UPnP) on the LAN side"
+      },
+      "ports": [
+        {
+          "id": "wan",
+          "label": "WAN 2.5G",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-1",
+          "label": "LAN 1 (1G)",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-2",
+          "label": "LAN 2 (1G)",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-3",
+          "label": "LAN 3 (1G)",
+          "type": "rj45"
+        },
+        {
+          "id": "usb",
+          "label": "USB 3.1 Gen 1",
+          "type": "usb-a"
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.1",
+        "tcp": 80
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the living room"
+      }
+    },
+    {
+      "id": "node-xt8",
+      "name": "ASUS ZenWiFi XT8 (mesh node)",
+      "kind": "access-point",
+      "vendor": "ASUS",
+      "model": "ZenWiFi AX XT8 (mesh node of the same pair)",
+      "zone": "rack",
+      "role": "Second mesh node, in the home office. The office's wired gear reaches the rest of the network through it, over a radio backhaul.",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.45",
+          "name": "ZenWiFi_XT8-8890",
+          "verified": "live",
+          "mac": "FC:34:97:9E:88:94",
+          "macVendor": "ASUSTek Computer Inc."
+        }
+      ],
+      "facts": {
+        "backhaul": "Wireless. The node is a client of the main router on 5 GHz-2 at -42 dBm (and on 2.4 GHz at -46 dBm as a fallback). No cable between the two.",
+        "wired": "Wired clients behind it: the NAS, the Mac mini's 2.5G adapter and a TP-Link MAC with no address (likely the switch)",
+        "role": "The router lists it as its ZenWiFi_XT8 node"
+      },
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.45",
+        "tcp": 80
+      },
+      "ports": [
+        {
+          "id": "wan",
+          "label": "WAN 2.5G (wired backhaul uplink)",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-1",
+          "label": "LAN 1 (1G)",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-2",
+          "label": "LAN 2 (1G)",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-3",
+          "label": "LAN 3 (1G)",
+          "type": "rj45"
+        },
+        {
+          "id": "usb",
+          "label": "USB 3.1 Gen 1",
+          "type": "usb-a"
+        }
+      ],
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: the second mesh is in the home office"
+      }
+    },
+    {
+      "id": "tv-philips",
+      "name": "Living Room TV",
+      "kind": "tv",
+      "vendor": "Philips",
+      "model": "Philips The One 55PUS8808, 55 inch 4K LED, 2023 (from the Shop B order of 2021-06-06; the set calls itself Philips Google TV TA1)",
+      "zone": "living-wired",
+      "role": "The television. Also a cast target with Ambilight.",
+      "verified": "live",
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the living room"
+      },
+      "net": [
+        {
+          "ip": "10.20.0.119",
+          "name": "Living Room TV",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "A8:43:A4:ED:27:06",
+          "macVendor": "China Dragon Technology (Wi-Fi module)",
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -43,
+          "apBasis": "router client list, 2026-11-20"
+        },
+        {
+          "medium": "bluetooth",
+          "mac": "A8:43:A4:ED:27:07",
+          "verified": "live",
+          "note": "Its own Bluetooth address, from its Android TV remote advertisement. Not paired with the Mac mini."
+        }
+      ],
+      "facts": {
+        "api": "Philips JointSpace API version 6.1 on ports 1925 and 1926; pairing is required to control it",
+        "connection": "On Wi-Fi, 5 GHz, at the living-room router (router client list). Its Ethernet port is not used.",
+        "features": "Ambilight, recordings",
+        "os": "Android 14 (DHCP client id), Google TV; cast firmware 3.72.446070",
+        "bought": "Shop B, 2021-06-06",
+        "services": "Chromecast, Android TV remote (6466), JointSpace (1925/1926), Spotify Connect"
+      },
+      "ports": [
+        {
+          "id": "eth",
+          "label": "Ethernet",
+          "type": "rj45"
+        },
+        {
+          "id": "hdmi-1",
+          "label": "HDMI 1",
+          "type": "hdmi"
+        }
+      ],
+      "probe": {
+        "type": "cast",
+        "ip": "10.20.0.119"
+      }
+    },
+    {
+      "id": "nas-f4423",
+      "name": "HomeNAS",
+      "kind": "nas",
+      "vendor": "TerraMaster",
+      "model": "F4-423 (4 bay)",
+      "zone": "rack",
+      "role": "Family storage.",
+      "verified": "live",
+      "net": [
+        {
+          "name": "HomeNas",
+          "ip": "10.20.0.192",
+          "medium": "ethernet",
+          "mac": "6C:BF:B5:30:68:65",
+          "macVendor": "Noon Technology (TerraMaster's hardware maker)",
+          "verified": "live",
+          "note": "DHCP lease; resolve by name, never hardcode. The router lists it as a wired client of the office mesh node."
+        }
+      ],
+      "facts": {
+        "state": "Online on 2026-11-20: SMB 445, SSH 22, the TOS web interface on 80/443/8181 all answer.",
+        "health": "Healthy means SMB TCP 445 answers. Ping is shed under load and proves nothing either way.",
+        "expectedThroughput": "About 250 to 280 MB/s over 2.5G, limited by the drives",
+        "model": "TerraMaster and TOS are shown by its web page and MAC vendor. F4-423 is from Alex; the model is not printed by any probe without logging in.",
+        "linkSpeed": "Not readable from outside: whether it links at 2.5G is not confirmed."
+      },
+      "ports": [
+        {
+          "id": "lan-1",
+          "label": "LAN 1 (2.5G)",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-2",
+          "label": "LAN 2 (2.5G)",
+          "type": "rj45"
+        },
+        {
+          "id": "usb-1",
+          "label": "USB 3.2 Gen 2 (1)",
+          "type": "usb-a"
+        },
+        {
+          "id": "usb-2",
+          "label": "USB 3.2 Gen 2 (2)",
+          "type": "usb-a"
+        },
+        {
+          "id": "hdmi",
+          "label": "HDMI",
+          "type": "hdmi"
+        }
+      ],
+      "probe": {
+        "type": "tcp",
+        "host": "HomeNAS",
+        "fallbackIps": [
+          "10.20.0.192"
+        ],
+        "tcp": 445
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the home office"
+      }
+    },
+    {
+      "id": "adapter-ugreen-5g",
+      "name": "UGREEN 5G USB-C LAN adapter",
+      "kind": "adapter",
+      "vendor": "UGREEN",
+      "model": "USB-C to 5 Gb/s Ethernet adapter (exact UGREEN code not confirmed)",
+      "zone": "spares",
+      "verified": "reported",
+      "probe": {
+        "type": "none"
+      },
+      "facts": {
+        "bought": "Shop A, 2021-10-07, EUR 74.99",
+        "here": "Would link at 2.5G on this switch, so it duplicates the 2.5G adapter"
+      }
+    },
+    {
+      "id": "adapter-belkin-inc012",
+      "name": "Belkin USB-C Ethernet adapter",
+      "kind": "adapter",
+      "vendor": "Belkin",
+      "model": "INC012btBK, USB-C to 2.5GbE",
+      "zone": "spares",
+      "verified": "reported",
+      "probe": {
+        "type": "none"
+      },
+      "facts": {
+        "bought": "Shop A, 2021-11-17, EUR 44.95"
+      }
+    },
+    {
+      "id": "dock-ugreen-m4",
+      "name": "UGREEN Mac mini M4 dock",
+      "kind": "hub",
+      "vendor": "UGREEN",
+      "model": "Mac mini M4 dock with M.2 enclosure and HDMI, no Ethernet (bought March 2026)",
+      "zone": "spares",
+      "verified": "reported",
+      "probe": {
+        "type": "none"
+      },
+      "facts": {
+        "bought": "Shop A, 2022-04-30, EUR 19.99",
+        "ports": "4 USB-A and 1 USB-C at 10 Gb/s, M.2 NVMe bay, SD/TF reader, HDMI; no Ethernet"
+      }
+    },
+    {
+      "id": "hue-bridge",
+      "name": "Hue Bridge",
+      "kind": "bridge",
+      "vendor": "Philips Hue",
+      "model": "Hue Bridge v2 (BSB002)",
+      "zone": "living-wired",
+      "role": "Zigbee hub for the Hue lamps.",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.4",
+          "name": "ecb5fa4cc451",
+          "medium": "ethernet",
+          "verified": "live",
+          "mac": "EC:B5:FA:4C:C4:51",
+          "macVendor": "Philips Lighting BV"
+        }
+      ],
+      "facts": {
+        "software": "1978688000 (API 1.78.0)",
+        "uplink": "Ethernet to the living-room router: the router lists it as one of its wired clients. Which LAN port is not confirmed.",
+        "devices": "Home Assistant lists 13 Hue devices behind it: 12 lamps and spots and one dimmer switch"
+      },
+      "probe": {
+        "type": "http",
+        "url": "http://10.20.0.4/api/0/config"
+      },
+      "ports": [
+        {
+          "id": "eth",
+          "label": "Ethernet",
+          "type": "rj45"
+        }
+      ],
+      "placement": {
+        "verified": "reported",
+        "basis": "Alex, 2026-11-20: in the living room"
+      }
+    },
+    {
+      "id": "speaker-living-display",
+      "name": "Living Room Display",
+      "kind": "speaker",
+      "vendor": "Google",
+      "model": "Nest Hub (generation not confirmed)",
+      "zone": "living",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.109",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "44:07:0B:81:BA:2E",
+          "macVendor": "Google, Inc.",
+          "ssid": "HomeNet",
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -57,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "ha": "media_player.living_room_display",
+      "probe": {
+        "type": "cast",
+        "ip": "10.20.0.109"
+      },
+      "facts": {
+        "os": "Fuchsia (hostname fuchsia-0a0b-0c0d-0e0f), cast firmware 3.80.559112",
+        "generation": "Reports itself as Google Nest Hub. Both generations do, so the generation is not confirmed."
+      }
+    },
+    {
+      "id": "speaker-living",
+      "name": "Living Room speaker",
+      "kind": "speaker",
+      "vendor": "Google",
+      "model": "Nest Audio",
+      "zone": "living",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.214",
+          "name": "Nest-Audio",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "D8:8C:79:A6:AC:17",
+          "macVendor": "Google, Inc.",
+          "ssid": "HomeNet",
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -56,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "ha": "media_player.living_room_speaker_2",
+      "probe": {
+        "type": "cast",
+        "ip": "10.20.0.214"
+      }
+    },
+    {
+      "id": "speaker-office-1",
+      "name": "Office speaker",
+      "kind": "speaker",
+      "vendor": "JBL",
+      "model": "Link Music",
+      "zone": "office",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.122",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "6C:47:60:B6:A4:1E",
+          "macVendor": "Sunitec Enterprise (module maker)",
+          "ssid": "HomeNet",
+          "ap": "node-xt8",
+          "band": "5 GHz",
+          "rssi": -23,
+          "apBasis": "router client list, 2026-11-20",
+          "note": "audiocast.local on mDNS; the router has no name for it."
+        }
+      ],
+      "facts": {
+        "also": "AirPlay 2 target",
+        "bought": "Shop B, 2021-04-26, bundle of two"
+      },
+      "ha": "media_player.office_speaker",
+      "probe": {
+        "type": "cast",
+        "ip": "10.20.0.122"
+      }
+    },
+    {
+      "id": "speaker-office-2",
+      "name": "Office speaker 2",
+      "kind": "speaker",
+      "vendor": "JBL",
+      "model": "Link Music",
+      "zone": "office",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.152",
+          "name": "audiocast",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "6C:47:60:B6:9D:F2",
+          "macVendor": "Sunitec Enterprise (module maker)",
+          "ssid": "HomeNet",
+          "ap": "node-xt8",
+          "band": "2.4 GHz",
+          "rssi": -36,
+          "apBasis": "router client list, 2026-11-20",
+          "note": "The router names this one audiocast and has no name for the first; on mDNS the first is audiocast and this one audiocast-2."
+        }
+      ],
+      "facts": {
+        "also": "AirPlay 2 target",
+        "bought": "Shop B, 2021-04-26, bundle of two"
+      },
+      "ha": "media_player.office_speaker_2",
+      "probe": {
+        "type": "cast",
+        "ip": "10.20.0.152"
+      }
+    },
+    {
+      "id": "speaker-bathroom",
+      "name": "Bathroom speaker",
+      "kind": "speaker",
+      "vendor": "Google",
+      "model": "Google Home Mini (1st gen)",
+      "zone": "bathroom",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.207",
+          "name": "Google-Home-Mini",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "44:07:0B:DE:77:DE",
+          "macVendor": "Google, Inc.",
+          "ssid": "HomeNet",
+          "ap": "node-xt8",
+          "band": "2.4 GHz",
+          "rssi": -54,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "ha": "media_player.bathroom_speaker",
+      "probe": {
+        "type": "cast",
+        "ip": "10.20.0.207"
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "the household dashboard floor plan"
+      }
+    },
+    {
+      "id": "speaker-bedroom",
+      "name": "Bedroom speaker",
+      "kind": "speaker",
+      "vendor": "Google",
+      "model": "Google Home (original)",
+      "zone": "bedroom",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.211",
+          "name": "Google-Home",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "20:DF:B9:7E:4D:F2",
+          "macVendor": "Google, Inc.",
+          "ssid": "HomeNet",
+          "ap": "node-xt8",
+          "band": "2.4 GHz",
+          "rssi": -46,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "ha": "media_player.bedroom_speaker",
+      "probe": {
+        "type": "cast",
+        "ip": "10.20.0.211"
+      }
+    },
+    {
+      "id": "cam-indoor",
+      "name": "Living room camera",
+      "kind": "camera",
+      "vendor": "eufy",
+      "model": "IndoorCam Pan 2K (T8410)",
+      "zone": "living",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.213",
+          "name": "Indoorcam",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "8C:85:80:2A:CA:7A",
+          "macVendor": "Smart Innovation LLC (eufy)",
+          "ap": "router-xt8",
+          "band": "2.4 GHz",
+          "rssi": -37,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "facts": {
+        "note": "Broadcasts HomeKit. Runs no web server, so its address never loads in a browser.",
+        "wifi": "2.4 GHz only. HomeKit through go2rtc on the Mac mini is the only integration path.",
+        "ports": "RTSP 554 and 9000 are open",
+        "homekit": "HomeKit record names it IndoorCam Pan 2K, model T8410"
+      },
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.213"
+      },
+      "ha": "camera.living_room",
+      "placement": {
+        "verified": "reported",
+        "basis": "the household dashboard files this camera (T8410) as camera.living_room"
+      }
+    },
+    {
+      "id": "cam-garage",
+      "name": "Pat's garage monitor",
+      "kind": "camera",
+      "vendor": "eufy",
+      "model": "Garage Monitor E21 (T8354)",
+      "zone": "bedroom",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.15",
+          "name": "eufy_Garage_Camera",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "2C:8D:48:C9:CD:2F",
+          "macVendor": "Smart Innovation LLC (eufy)",
+          "ap": "node-xt8",
+          "band": "2.4 GHz",
+          "rssi": -49,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.15"
+      },
+      "ha": "camera.alma",
+      "placement": {
+        "verified": "reported",
+        "basis": "the household dashboard places it in the bedroom, where the cot is, and calls that a guess"
+      },
+      "facts": {
+        "power": "Battery. Its picture is published on demand only, because a standing stream drains the cell.",
+        "identity": "A eufy device (MAC vendor) named eufy_Garage_Camera. E21 is from Alex's own mail with eufy support about this unit; T8354 is from the household dashboard's camera table.",
+        "bought": "Shop A, 2022-02-07 (the parent unit was replaced under warranty in early 2024)",
+        "ports": "8888 open"
+      }
+    },
+    {
+      "id": "cam-bedroom",
+      "name": "Bedroom camera",
+      "kind": "camera",
+      "vendor": "eufy",
+      "model": "Indoor Cam 2K (T8400)",
+      "zone": "bedroom",
+      "verified": "reported",
+      "ha": "camera.bedroom",
+      "placement": {
+        "verified": "reported",
+        "basis": "the household dashboard files it as camera.bedroom"
+      },
+      "facts": {
+        "note": "Never seen on this network. The router remembers 57 clients and only three carry eufy's MAC prefix: the living room camera, the garage camera and the garage monitor's parent unit. None of the unnamed hosts is this camera: each of them is now accounted for.",
+        "state": "Either it is not powered, or it was never joined to this Wi-Fi."
+      },
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "vacuum-omni-e28",
+      "name": "Omni E28",
+      "kind": "vacuum",
+      "vendor": "eufy",
+      "model": "Robot Vacuum Omni E28",
+      "zone": "hallway",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.129",
+          "name": "eufyOmniE28",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "60:56:EE:6B:B7:04",
+          "macVendor": "AltoBeam (Wi-Fi chip)",
+          "ap": "router-xt8",
+          "band": "2.4 GHz",
+          "rssi": -50,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "facts": {
+        "integration": "Matter, through the Matter server running natively on the Mac mini",
+        "wifi": "2.4 GHz only",
+        "matter": "Matter node on port 5540; Home Assistant has it as Anker Innovations 2AAAA-EXAMPLE1, hardware V7, software 3.0"
+      },
+      "ha": "vacuum.2aaaa_example1",
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.129"
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "the household dashboard's floor plan puts the dock on the hallway side of the living room wall"
+      }
+    },
+    {
+      "id": "dishwasher-bosch",
+      "name": "Bosch dishwasher",
+      "kind": "appliance",
+      "vendor": "Bosch",
+      "model": "SBV4EVX08E, Serie 4 integrated 60 cm, Home Connect",
+      "zone": "kitchen",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.218",
+          "name": "bosch-dishwasher",
+          "medium": "wifi",
+          "verified": "live",
+          "mac": "48:26:4C:67:86:4B",
+          "macVendor": "BSH Electrical Appliances",
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -63,
+          "apBasis": "router client list, 2026-11-20"
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.218"
+      },
+      "facts": {
+        "identity": "Its Home Connect record on the LAN reads brand BOSCH, type Dishwasher, vib SBV4EVX08E: the same model as the Shop C order of 2022-07-21",
+        "bought": "Shop C, 2022-07-21",
+        "ports": "443 (Home Connect, TLS)"
+      }
+    },
+    {
+      "id": "unknown-mxchip",
+      "name": "Philips fan heater",
+      "kind": "appliance",
+      "vendor": "Philips",
+      "model": "5000 Series connected tower fan heater CX5120/11",
+      "zone": "bedroom",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.53",
+          "name": "mxchip",
+          "medium": "wifi",
+          "mac": "68:79:C4:5F:28:6E",
+          "macVendor": "Shanghai MXCHIP (Wi-Fi module)",
+          "ap": "router-xt8",
+          "band": "2.4 GHz",
+          "rssi": -55,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live"
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.53"
+      },
+      "role": "Wi-Fi fan heater, controlled from the Philips Air+ app. Was the unnamed host mxchip.",
+      "facts": {
+        "identity": "Asked over CoAP (UDP 5683, /sys/dev/info) it answers modelid CX5120/11, type Apollo, name Bedroom",
+        "bought": "Shop A, 2022-03-20",
+        "ports": "No TCP port open; CoAP on UDP 5683",
+        "power": "2000 W heater: it should be on a wall socket of its own"
+      },
+      "placement": {
+        "verified": "reported",
+        "basis": "The heater's own name in the Philips app is Bedroom. At the probe it was on the living-room router's 2.4 GHz radio."
+      }
+    },
+    {
+      "id": "unknown-85",
+      "name": "Alex's MacBook Pro",
+      "kind": "computer",
+      "vendor": "Apple",
+      "model": "MacBook Pro 16-inch, 2021 (model identifier MacBookPro18,1; M1 Pro or M1 Max not shown)",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "name": "Alexs-MacBook-Pro",
+          "ip": "10.20.0.85",
+          "medium": "wifi",
+          "mac": "96:95:E5:7D:94:21",
+          "randomizedMac": true,
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -51,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live",
+          "note": "Alexs-MacBook-Pro.local resolves to this address by mDNS; its AirPlay record gives am=MacBookPro18,1. The router has no name for it because it uses a private Wi-Fi address."
+        },
+        {
+          "medium": "bluetooth",
+          "mac": "C2:F5:E2:ED:42:51",
+          "pairedWith": "mac-mini",
+          "connected": false,
+          "verified": "live",
+          "note": "Known Bluetooth device on the Mac mini (Apple Continuity), not connected."
+        },
+        {
+          "if": "tailscale",
+          "ip": "100.64.0.12",
+          "name": "family-macbook",
+          "verified": "live",
+          "note": "In the tailnet as Alex's MacBook Pro, offline there for 86 days."
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.85"
+      },
+      "role": "Alex's personal laptop. Was the unnamed host at .85.",
+      "facts": {
+        "seen": "Answers ping slowly (about 200 ms) with no open port: asleep, lid closed or firewall in stealth mode",
+        "airplay": "AirPlay receiver advertised, source version 960.11.2"
+      },
+      "placement": {
+        "verified": "live",
+        "basis": "On the living-room router's 5 GHz radio at the probe; it is a laptop, so the room is not fixed"
+      }
+    },
+    {
+      "id": "phone-alex",
+      "name": "Alex's iPhone",
+      "kind": "phone",
+      "vendor": "Apple",
+      "model": "iPhone 17 Pro Max (iPhone18,2), iOS 27.3, if the phone named SamsPhone is Alex's: likely, not confirmed",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "if": "tailscale",
+          "ip": "100.64.0.11",
+          "name": "alex-iphone",
+          "verified": "live"
+        },
+        {
+          "ip": "10.20.0.252",
+          "name": "SamsPhone",
+          "medium": "wifi",
+          "mac": "3C:FB:02:E8:8E:63",
+          "macVendor": "Apple, Inc.",
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -41,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live",
+          "note": "The iPhone named SamsPhone. Home Assistant's companion app reports it as iPhone18,2 on iOS 27.3. That it is Alex's rests on it being paired with his Mac mini and running his Home Assistant app."
+        },
+        {
+          "medium": "bluetooth",
+          "mac": "3C:FB:02:EC:36:2D",
+          "pairedWith": "mac-mini",
+          "connected": false,
+          "verified": "live",
+          "note": "SamsPhone is a known Bluetooth device on the Mac mini, in range (RSSI -68), not connected."
+        }
+      ],
+      "ha": "device_tracker.alex_phone",
+      "probe": {
+        "type": "ha",
+        "entity": "device_tracker.alex_phone"
+      },
+      "facts": {
+        "ports": "62078 (iPhone sync) open; Wi-Fi sync is advertised"
+      }
+    },
+    {
+      "id": "phone-sam",
+      "name": "Sam's iPhone",
+      "kind": "phone",
+      "vendor": "Apple",
+      "model": "iPhone",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "if": "tailscale",
+          "ip": "100.64.0.13",
+          "name": "sam-iphone",
+          "verified": "live"
+        }
+      ],
+      "ha": "device_tracker.sam_phone",
+      "probe": {
+        "type": "ha",
+        "entity": "device_tracker.sam_phone"
+      },
+      "facts": {
+        "lan": "Its address on the home Wi-Fi is not established. The unnamed iPhone or iPad at 10.20.0.199 is the candidate."
+      }
+    },
+    {
+      "id": "internet",
+      "name": "Internet",
+      "kind": "internet",
+      "vendor": "CableCo",
+      "model": "CableCo cable internet",
+      "zone": "outside",
+      "role": "The provider's network. Everything that leaves the house goes this way.",
+      "verified": "live",
+      "facts": {
+        "provider": "The router's WAN gateway carries a cableco.nl cable name"
+      },
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "mediabox-cableco",
+      "name": "CableCo Mediabox",
+      "kind": "tv",
+      "vendor": "CableCo (made by ARRIS / CommScope)",
+      "model": "Mediabox (which generation is not confirmed; it is on the label)",
+      "zone": "living-wired",
+      "role": "CableCo's TV receiver, cabled to the living-room router.",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.186",
+          "name": "Mediabox",
+          "medium": "ethernet",
+          "mac": "94:8F:CF:E5:30:1D",
+          "macVendor": "CommScope (ARRIS)",
+          "verified": "live",
+          "note": "Wired client of the main router. Does not answer ping."
+        }
+      ],
+      "facts": {
+        "naming": "Alex named this MAC CableCo Mediabox in the router's client list; it announces itself as Mediabox."
+      },
+      "ports": [
+        {
+          "id": "eth",
+          "label": "Ethernet",
+          "type": "rj45"
+        },
+        {
+          "id": "hdmi",
+          "label": "HDMI out",
+          "type": "hdmi"
+        },
+        {
+          "id": "coax",
+          "label": "Coax in",
+          "type": "coax"
+        }
+      ],
+      "probe": {
+        "type": "none"
+      },
+      "placement": {
+        "verified": "live",
+        "basis": "Cabled to the living-room router"
+      }
+    },
+    {
+      "id": "unknown-mac-98",
+      "name": "Unidentified Mac (.98)",
+      "kind": "computer",
+      "vendor": "Apple",
+      "model": "A Mac, model not known",
+      "zone": "unplaced",
+      "verified": "live",
+      "role": "A Mac on the Wi-Fi that is none of the three known ones.",
+      "net": [
+        {
+          "ip": "10.20.0.98",
+          "name": "Mac",
+          "medium": "wifi",
+          "mac": "82:9D:2B:2E:B1:57",
+          "randomizedMac": true,
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -51,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live",
+          "note": "The router types it as a Mac and it announces the name Mac, which is what macOS sends with a private Wi-Fi address. No port open, slow to answer ping: asleep."
+        }
+      ],
+      "facts": {
+        "notThese": "The Mac mini is at .126 and .140, the work MacBook at .182 and .43, Alex's MacBook Pro at .85."
+      },
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.98"
+      }
+    },
+    {
+      "id": "unknown-lwip0",
+      "name": "Tuya smart device (lwip0)",
+      "kind": "unknown",
+      "vendor": "Tuya",
+      "model": "A Tuya-based Wi-Fi device; the product is not identified",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.64",
+          "name": "lwip0",
+          "medium": "wifi",
+          "mac": "C0:F8:53:45:CD:77",
+          "macVendor": "Tuya Smart Inc.",
+          "ap": "node-xt8",
+          "band": "2.4 GHz",
+          "rssi": -59,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live",
+          "note": "Only TCP 6668 is open, Tuya's local control port. On the office node's radio, so it is in or near the office, bedroom or bathroom."
+        }
+      ],
+      "facts": {
+        "candidate": "A set of two MoesGo Wi-Fi smart light switch modules (2 gang, Tuya app) was ordered on Shop A on 2021-02-03. Only one Tuya device is on the network."
+      },
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.64",
+        "tcp": 6668
+      }
+    },
+    {
+      "id": "unknown-ios-199",
+      "name": "Unidentified iPhone or iPad (.199)",
+      "kind": "phone",
+      "vendor": "Apple",
+      "model": "iPhone or iPad, model not known",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.199",
+          "medium": "wifi",
+          "mac": "86:C7:76:51:71:47",
+          "randomizedMac": true,
+          "ap": "router-xt8",
+          "band": "5 GHz",
+          "rssi": -50,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live",
+          "note": "Port 62078 (iOS sync) is open and the router types it as an Apple phone or tablet. Private address, no name."
+        }
+      ],
+      "facts": {
+        "candidate": "Sam's iPhone: both phones were home at the probe and the other iPhone on the Wi-Fi is SamsPhone."
+      },
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.199"
+      }
+    },
+    {
+      "id": "unknown-imx8mm",
+      "name": "Unidentified device (imx8mm-example)",
+      "kind": "unknown",
+      "vendor": "",
+      "model": "A Linux device on an NXP i.MX 8M Mini chip; likely a reMarkable Paper Pro tablet",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.142",
+          "name": "imx8mm-example",
+          "medium": "wifi",
+          "mac": "24:FD:FA:5F:E1:F6",
+          "macVendor": "Private (the maker hides its name in the registry)",
+          "band": "5 GHz",
+          "verified": "live",
+          "note": "Took a lease about an hour before the probe and was gone again at the probe: it joins briefly and sleeps. Which mesh node it used is not known."
+        }
+      ],
+      "facts": {
+        "candidate": "reMarkable Paper Pro: ferrari is reMarkable's code name for that tablet on its developer site, and the mailbox holds reMarkable customer mail. No order confirmation was found."
+      },
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.142"
+      }
+    },
+    {
+      "id": "console-ps5",
+      "name": "PlayStation 5",
+      "kind": "console",
+      "vendor": "Sony",
+      "model": "PlayStation 5 (from the Shop A order of 2021-03-16; the edition is not confirmed)",
+      "zone": "unplaced",
+      "verified": "reported",
+      "net": [
+        {
+          "ip": "10.20.0.191",
+          "medium": "wifi",
+          "mac": "5C:84:3C:D7:16:10",
+          "macVendor": "Sony Interactive Entertainment",
+          "band": "5 GHz",
+          "verified": "live",
+          "note": "The router holds a lease for this Sony Interactive Entertainment MAC and types it as a game console. Off or in rest mode at the probe. This address was once taken for the NAS's."
+        }
+      ],
+      "facts": {
+        "bought": "Shop A, 2021-03-16, PlayStation 5 console with God of War Ragnarok voucher"
+      },
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.191"
+      }
+    },
+    {
+      "id": "watch-alex",
+      "name": "Alex's Apple Watch",
+      "kind": "wearable",
+      "vendor": "Apple",
+      "model": "Apple Watch (model not known)",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.204",
+          "name": "Watch",
+          "medium": "wifi",
+          "mac": "3E:95:32:D7:50:41",
+          "randomizedMac": true,
+          "ap": "node-xt8",
+          "band": "2.4 GHz",
+          "rssi": -59,
+          "apBasis": "router client list, 2026-11-20",
+          "verified": "live",
+          "note": "Announces the name Watch; does not answer ping."
+        },
+        {
+          "medium": "bluetooth",
+          "mac": "40:92:1A:F3:0E:37",
+          "pairedWith": "mac-mini",
+          "connected": false,
+          "verified": "live",
+          "note": "Known to the Mac mini as Alex's Apple Watch, in range (RSSI -69). Used for Auto Unlock."
+        }
+      ],
+      "facts": {
+        "match": "That the Wi-Fi host named Watch is this watch is likely: it is the only Apple Watch known here. A second watch in the house would look the same."
+      },
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "headphones-bose-qc45",
+      "name": "Bose QC45",
+      "kind": "headphones",
+      "vendor": "Bose",
+      "model": "QuietComfort 45 (Bluetooth name Bose QC45, product 0x4039, firmware 4.0.4)",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "medium": "bluetooth",
+          "mac": "AC:BF:71:5E:04:FA",
+          "macVendor": "Bose Corporation",
+          "pairedWith": "mac-mini",
+          "connected": false,
+          "verified": "live",
+          "note": "Paired with the Mac mini, not connected at the probe."
+        }
+      ],
+      "probe": {
+        "type": "bluetooth",
+        "mac": "AC:BF:71:5E:04:FA",
+        "name": "Bose QC45"
+      }
+    },
+    {
+      "id": "airpods-alex",
+      "name": "Kim's AirPods",
+      "kind": "headphones",
+      "vendor": "Apple",
+      "model": "AirPods (Bluetooth product 0x2014, firmware 9B47; which AirPods model that is has not been confirmed)",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "medium": "bluetooth",
+          "mac": "EC:73:79:09:99:6F",
+          "macVendor": "Apple, Inc.",
+          "pairedWith": "mac-mini",
+          "connected": false,
+          "verified": "live",
+          "note": "Paired with the Mac mini, not connected at the probe."
+        }
+      ],
+      "probe": {
+        "type": "bluetooth",
+        "mac": "EC:73:79:09:99:6F",
+        "name": "Kim’s Airpods"
+      }
+    },
+    {
+      "id": "airpods-sam",
+      "name": "Robin's AirPods Pro",
+      "kind": "headphones",
+      "vendor": "Apple",
+      "model": "AirPods Pro by their own name (generation not known; the Mac mini has no product id for them)",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "medium": "bluetooth",
+          "mac": "E4:90:FD:7E:90:6A",
+          "macVendor": "Apple, Inc.",
+          "pairedWith": "mac-mini",
+          "connected": false,
+          "verified": "live",
+          "note": "Known to the Mac mini through iCloud, never connected to it (placeholder ids), not connected at the probe."
+        }
+      ],
+      "probe": {
+        "type": "bluetooth",
+        "mac": "E4:90:FD:7E:90:6A",
+        "name": "Robin’s AirPods Pro"
+      }
+    },
+    {
+      "id": "monitor-garage-viewer",
+      "name": "eufy garage monitor (parent unit)",
+      "kind": "display",
+      "vendor": "eufy",
+      "model": "Garage Monitor E21 parent unit (the handheld screen)",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "name": "eufy_Garage_Monitor",
+          "medium": "wifi",
+          "mac": "2C:8D:48:C9:FC:5F",
+          "macVendor": "Smart Innovation LLC (eufy)",
+          "band": "2.4 GHz",
+          "verified": "live",
+          "note": "In the router's memory under this name, last joined around 2026-11-17. Not on the network at the probe."
+        }
+      ],
+      "facts": {
+        "note": "The screen that pairs with Pat's garage camera. Replaced under warranty in early 2024 according to Alex's mail with eufy support."
+      },
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "printer-canon",
+      "name": "Canon printer",
+      "kind": "printer",
+      "vendor": "Canon",
+      "model": "Canon printer (model not known)",
+      "zone": "unplaced",
+      "verified": "reported",
+      "net": [
+        {
+          "medium": "wifi",
+          "mac": "6C:3C:7C:E7:04:37",
+          "macVendor": "Canon Inc.",
+          "band": "2.4 GHz",
+          "verified": "live",
+          "note": "Alex named this MAC Canon Printer in the router. Last joined around 2026-10-27; off the network at the probe."
+        }
+      ],
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "unknown-espressif",
+      "name": "Unidentified device (espressif)",
+      "kind": "unknown",
+      "vendor": "",
+      "model": "Something built on an Espressif ESP Wi-Fi chip; product not identified",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "name": "espressif",
+          "medium": "wifi",
+          "mac": "28:84:85:2A:96:24",
+          "macVendor": "Espressif Inc.",
+          "band": "2.4 GHz",
+          "verified": "live",
+          "note": "In the router's memory, last joined around 2026-11-08. Not on the network at the probe."
+        }
+      ],
+      "probe": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "unknown-ios-253",
+      "name": "Unidentified Apple device (.253)",
+      "kind": "phone",
+      "vendor": "Apple",
+      "model": "iPhone or iPad by the router's fingerprint, model not known",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.253",
+          "medium": "wifi",
+          "mac": "2A:0E:21:85:81:F1",
+          "randomizedMac": true,
+          "band": "2.4 GHz",
+          "verified": "live",
+          "note": "Holds a lease taken on 2026-11-20; did not answer at the probe. Private address, no name."
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.253"
+      }
+    },
+    {
+      "id": "unknown-158",
+      "name": "Unidentified device (.158)",
+      "kind": "unknown",
+      "vendor": "",
+      "model": "Not identified: private address, no name, no vendor",
+      "zone": "unplaced",
+      "verified": "live",
+      "net": [
+        {
+          "ip": "10.20.0.158",
+          "medium": "wifi",
+          "mac": "52:9B:5D:9D:32:7F",
+          "randomizedMac": true,
+          "band": "5 GHz",
+          "verified": "live",
+          "note": "In the router's ARP table, last joined on 2026-11-19; did not answer at the probe."
+        }
+      ],
+      "probe": {
+        "type": "ping",
+        "ip": "10.20.0.158"
+      }
+    }
+  ],
+  "links": [
+    {
+      "id": "l-mini-kvm",
+      "from": "mac-mini:tb-1",
+      "to": "kvm-ugreen:pc1",
+      "cable": "usb-c",
+      "carries": [
+        "video",
+        "usb"
+      ],
+      "label": "USB-C: video + USB",
+      "kvmInput": "pc1",
+      "verified": "live",
+      "evidence": "The KVM's USB hub (with the Stream Deck Neo behind it) and the Odyssey both enumerate on the Mac mini, on a rear Thunderbolt port. Which rear port is not confirmed."
+    },
+    {
+      "id": "l-kvm-monitor",
+      "from": "kvm-ugreen:out",
+      "to": "monitor-g70b:hdmi-in",
+      "cable": "hdmi",
+      "carries": [
+        "video"
+      ],
+      "label": "HDMI 4K60",
+      "verified": "live",
+      "evidence": "Mac mini drives the Odyssey at 3840x2160 @ 60 Hz."
+    },
+    {
+      "id": "l-kvm-streamdeck",
+      "from": "kvm-ugreen:usb-1",
+      "to": "streamdeck-neo:usb",
+      "cable": "usb",
+      "carries": [
+        "usb"
+      ],
+      "verified": "live",
+      "evidence": "Stream Deck Neo enumerates behind the GenesysLogic hub. Which front port is not confirmed."
+    },
+    {
+      "id": "l-mini-audio",
+      "from": "mac-mini:tb-3",
+      "to": "usb-audio:usb",
+      "cable": "usb",
+      "carries": [
+        "usb"
+      ],
+      "verified": "live",
+      "evidence": "Enumerates on its own USB bus, one of the three rear Thunderbolt ports; the front ports sit behind Apple's built-in hubs and are empty. Which rear port is not confirmed."
+    },
+    {
+      "id": "l-mini-adapter",
+      "from": "mac-mini:tb-2",
+      "to": "adapter-ugreen-25g:usbc",
+      "cable": "usb-c",
+      "carries": [
+        "network"
+      ],
+      "speed": "5 Gb/s USB",
+      "verified": "live",
+      "evidence": "Realtek 8156 enumerates at 5 Gb/s as en8 on a rear Thunderbolt port. Which rear port is not confirmed."
+    },
+    {
+      "id": "l-adapter-switch",
+      "from": "adapter-ugreen-25g:eth",
+      "to": "switch-sg105m2:p2",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "speed": "2.5G",
+      "verified": "live",
+      "evidence": "en8 negotiates 2500Base-T full duplex, and the router lists the adapter's MAC as a wired client of the office node. The switch port number is from the plan."
+    },
+    {
+      "id": "l-nas-switch",
+      "from": "nas-f4423:lan-1",
+      "to": "switch-sg105m2:p1",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "speed": "2.5G",
+      "verified": "live",
+      "evidence": "The NAS answers on SMB 445 and the router lists it as a wired client of the office node, the same side as the Mac mini. That it is plugged into the switch and not into the node, the port numbers and the 2.5G speed are from the plan."
+    },
+    {
+      "id": "l-node-switch",
+      "from": "node-xt8:lan-1",
+      "to": "switch-sg105m2:p3",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "speed": "1G",
+      "label": "1G uplink",
+      "verified": "live",
+      "evidence": "The router lists the Mac mini's adapter, the NAS and a TP-Link MAC as wired clients of the office node, so the office's wired gear hangs off that node. The port numbers are from the plan."
+    },
+    {
+      "id": "l-macbook-hub",
+      "from": "macbook-work:usbc-1",
+      "to": "hub-arcdock:host",
+      "cable": "usb-c",
+      "carries": [
+        "video",
+        "usb",
+        "network",
+        "power"
+      ],
+      "verified": "plan",
+      "evidence": "Not probed (the work MacBook is off limits). About an hour before the probe the router leased an address to a wired CE-Link Ethernet chip announcing the MacBook's name, which fits a dock in use then; at the probe it was gone."
+    },
+    {
+      "id": "l-hub-kvm-hdmi",
+      "from": "hub-arcdock:hdmi",
+      "to": "kvm-ugreen:pc2-hdmi",
+      "cable": "hdmi",
+      "carries": [
+        "video"
+      ],
+      "kvmInput": "pc2",
+      "verified": "plan",
+      "risk": "UGREEN says docks are unsupported on some of its other KVM models; not confirmed either way for this one."
+    },
+    {
+      "id": "l-hub-kvm-usb",
+      "from": "kvm-ugreen:pc2-usb",
+      "to": "hub-arcdock:usba-1",
+      "cable": "usb",
+      "carries": [
+        "usb"
+      ],
+      "label": "USB data",
+      "kvmInput": "pc2",
+      "verified": "plan"
+    },
+    {
+      "id": "l-hub-switch",
+      "from": "hub-arcdock:eth",
+      "to": "switch-sg105m2:p4",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "speed": "2.5G",
+      "verified": "plan",
+      "evidence": "Plan. A wired CE-Link Ethernet chip with the MacBook's name held a lease from 20:43 on 2026-11-20 but was not connected at the probe. That this chip is the ArcDock, and that it goes to the switch, is not confirmed."
+    },
+    {
+      "id": "l-router-node",
+      "from": "router-xt8",
+      "to": "node-xt8",
+      "cable": "mesh",
+      "carries": [
+        "network"
+      ],
+      "label": "Mesh backhaul, radio (5 GHz-2)",
+      "verified": "live",
+      "evidence": "The node is a wireless client of the main router on 5 GHz-2 at -42 dBm (router client list). There is no cable between them.",
+      "medium": "wireless"
+    },
+    {
+      "id": "l-router-hue",
+      "from": "router-xt8",
+      "to": "hue-bridge:eth",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "verified": "live",
+      "evidence": "The main router lists the bridge as a wired client. Which LAN port it uses is not confirmed."
+    },
+    {
+      "id": "l-modem-router",
+      "from": "modem-cableco:lan-1",
+      "to": "router-xt8:wan",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "label": "Internet",
+      "verified": "live",
+      "evidence": "The router's WAN port holds a public CableCo address by DHCP and the modem's page answers behind it, so this cable is in use and the modem is bridged. The modem's port name is from the plan."
+    },
+    {
+      "id": "l-bt-keyboard",
+      "from": "keyboard",
+      "to": "mac-mini",
+      "cable": "bluetooth",
+      "carries": [
+        "input"
+      ],
+      "label": "Bluetooth LE",
+      "state": "connected",
+      "verified": "live",
+      "evidence": "The Mac mini's Bluetooth controller lists MX Keys (E4:2A:0F:DC:29:C1) as connected, HID over Bluetooth LE."
+    },
+    {
+      "id": "l-bt-mouse",
+      "from": "mouse",
+      "to": "mac-mini",
+      "cable": "bluetooth",
+      "carries": [
+        "input"
+      ],
+      "label": "Bluetooth LE",
+      "state": "connected",
+      "verified": "live",
+      "evidence": "The Mac mini's Bluetooth controller lists MX Master 3 Mac (E0:3E:BB:B8:0B:25) as connected, HID over Bluetooth LE."
+    },
+    {
+      "id": "l-bt-headphones-bose-qc45",
+      "from": "headphones-bose-qc45",
+      "to": "mac-mini",
+      "cable": "bluetooth",
+      "carries": [
+        "audio"
+      ],
+      "label": "Bluetooth, paired",
+      "state": "paired",
+      "verified": "live",
+      "evidence": "The Mac mini lists Bose QC45 as a paired Bluetooth device, not connected at the probe."
+    },
+    {
+      "id": "l-bt-airpods-alex",
+      "from": "airpods-alex",
+      "to": "mac-mini",
+      "cable": "bluetooth",
+      "carries": [
+        "audio"
+      ],
+      "label": "Bluetooth, paired",
+      "state": "paired",
+      "verified": "live",
+      "evidence": "The Mac mini lists Kim's AirPods as a paired Bluetooth device, not connected at the probe."
+    },
+    {
+      "id": "l-bt-airpods-sam",
+      "from": "airpods-sam",
+      "to": "mac-mini",
+      "cable": "bluetooth",
+      "carries": [
+        "audio"
+      ],
+      "label": "Bluetooth, paired",
+      "state": "paired",
+      "verified": "live",
+      "evidence": "The Mac mini lists Robin's AirPods Pro as a paired Bluetooth device, not connected at the probe."
+    },
+    {
+      "id": "l-internet-modem",
+      "from": "internet",
+      "to": "modem-cableco:coax",
+      "cable": "coax",
+      "carries": [
+        "network"
+      ],
+      "label": "CableCo cable",
+      "verified": "live",
+      "evidence": "The router's WAN port holds a public address whose gateway carries a cableco.nl cable name, so the modem is online on CableCo's cable network. The coax socket itself cannot be probed."
+    },
+    {
+      "id": "l-router-mediabox",
+      "from": "router-xt8",
+      "to": "mediabox-cableco:eth",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "verified": "live",
+      "evidence": "The main router lists the Mediabox as a wired client. Which LAN port it uses is not confirmed."
+    }
+  ],
+  "wireless": {
+    "note": "Which node each Wi-Fi device uses is recorded on its net entry (ap, band, rssi) as read from the router's client list on 2026-11-20. Devices roam, so this is where each one was at the probe.",
+    "ssidKnown": true,
+    "ssid": "HomeNet",
+    "backhaul": "radio, 5 GHz-2, -42 dBm",
+    "aps": {
+      "router-xt8": {
+        "mac": "FC:34:97:9E:7E:54",
+        "bssids": {
+          "5 GHz": "fc:34:97:9e:7e:58"
+        }
+      },
+      "node-xt8": {
+        "mac": "FC:34:97:9E:88:94",
+        "bssids": {
+          "2.4 GHz": "fc:34:97:9e:88:95",
+          "5 GHz": "fc:34:97:9e:88:98",
+          "5 GHz-2 (backhaul)": "fc:34:97:9e:88:9c"
+        }
+      }
+    }
+  },
+  "openQuestions": [
+    {
+      "id": "q-mac-98",
+      "text": "A Mac at 10.20.0.98 is none of the three known ones. Is it Sam's? On that Mac: Apple menu, About This Mac, and System Settings, Wi-Fi, Details shows the address 10.20.0.98.",
+      "devices": [
+        "unknown-mac-98"
+      ]
+    },
+    {
+      "id": "q-samsphone",
+      "text": "Is the iPhone named SamsPhone (iPhone 17 Pro Max) yours? Settings, General, About shows the name.",
+      "devices": [
+        "phone-alex"
+      ]
+    },
+    {
+      "id": "q-ios-199",
+      "text": "Which iPhone or iPad has the address 10.20.0.199? On Sam's iPhone: Settings, Wi-Fi, tap the (i) next to HomeNet, read IP Address.",
+      "devices": [
+        "unknown-ios-199",
+        "phone-sam"
+      ]
+    },
+    {
+      "id": "q-lwip0",
+      "text": "One Tuya device is on the Wi-Fi near the office or bedroom. Open the Tuya or Smart Life app: which device is online? (Two MoesGo switch modules were bought in 2023.)",
+      "devices": [
+        "unknown-lwip0"
+      ]
+    },
+    {
+      "id": "q-imx8mm",
+      "text": "Do you own a reMarkable Paper Pro? A device calling itself imx8mm-example joins the Wi-Fi now and then. On the tablet: Settings, General, About.",
+      "devices": [
+        "unknown-imx8mm"
+      ]
+    },
+    {
+      "id": "q-work-macbook",
+      "text": "Which MacBook Pro is the work laptop? Apple menu, About This Mac (size, chip, year).",
+      "devices": [
+        "macbook-work"
+      ]
+    },
+    {
+      "id": "q-kvm-model",
+      "text": "What is the model number on the label under the UGREEN KVM?",
+      "devices": [
+        "kvm-ugreen"
+      ]
+    },
+    {
+      "id": "q-arcdock",
+      "text": "What code is printed under the Spigen ArcDock (PD2302?), and is it the dock the work MacBook's network cable runs through?",
+      "devices": [
+        "hub-arcdock"
+      ]
+    },
+    {
+      "id": "q-modem",
+      "text": "What model is on the CableCo modem's label (for example Sagemcom F3896LG or Compal CH7465LG)?",
+      "devices": [
+        "modem-cableco"
+      ]
+    },
+    {
+      "id": "q-mediabox",
+      "text": "Which Mediabox is it (Next, Next Mini, XL)? It is on the label underneath.",
+      "devices": [
+        "mediabox-cableco"
+      ]
+    },
+    {
+      "id": "q-tv",
+      "text": "Is the living room TV the Philips 55PUS8808 from the December 2023 Shop B order? On the TV: Settings, System, About, Model.",
+      "devices": [
+        "tv-philips"
+      ]
+    },
+    {
+      "id": "q-nest-hub",
+      "text": "Which Nest Hub generation? Under the base: H1A is the 1st generation, GUIK2 the 2nd. Or Google Home app, the device, Settings, Device information.",
+      "devices": [
+        "speaker-living-display"
+      ]
+    },
+    {
+      "id": "q-ugreen-5g",
+      "text": "What model code is printed on the UGREEN 5G adapter in the spares drawer?",
+      "devices": [
+        "adapter-ugreen-5g"
+      ]
+    },
+    {
+      "id": "q-cam-bedroom",
+      "text": "The bedroom camera (T8400) has never been on this Wi-Fi. Is it plugged in, and does the eufy Security app list it?",
+      "devices": [
+        "cam-bedroom"
+      ]
+    },
+    {
+      "id": "q-usb-mic",
+      "text": "Is the small USB-C microphone in the back of the Mac mini the DUNGZDUZ one from March 2026? Unplug it: if USB PnP Sound Device disappears from Sound settings, it is.",
+      "devices": [
+        "usb-audio"
+      ]
+    },
+    {
+      "id": "q-kbd-mouse-work",
+      "text": "Are the MX Keys and MX Master 3 also paired with the work MacBook on another Easy-Switch channel? The lit number on the keyboard's Easy-Switch keys shows the active one.",
+      "devices": [
+        "keyboard",
+        "mouse",
+        "macbook-work"
+      ]
+    },
+    {
+      "id": "q-airpods",
+      "text": "Which AirPods models are Kim's AirPods and Robin's AirPods Pro? On the iPhone: Settings, the AirPods, Model Name.",
+      "devices": [
+        "airpods-alex",
+        "airpods-sam"
+      ]
+    },
+    {
+      "id": "q-watch",
+      "text": "Which Apple Watch model? Watch app, General, About.",
+      "devices": [
+        "watch-alex"
+      ]
+    },
+    {
+      "id": "q-monitor-suffix",
+      "text": "The exact Odyssey G70B code on the monitor's back label (for example S32BG700EU).",
+      "devices": [
+        "monitor-g70b"
+      ]
+    },
+    {
+      "id": "q-nas-model",
+      "text": "Confirm the NAS model from its own page: TOS, Control Panel, Hardware Information (F4-423 is from you, no probe shows it).",
+      "devices": [
+        "nas-f4423"
+      ]
+    },
+    {
+      "id": "q-small-unknowns",
+      "text": "Three devices were on the Wi-Fi recently and are off now: one calling itself espressif, an Apple phone or tablet at .253 and an unnamed one at .158. Any guest phones or a small gadget (a plug, sensor or lamp) this month?",
+      "devices": [
+        "unknown-espressif",
+        "unknown-ios-253",
+        "unknown-158"
+      ]
+    },
+    {
+      "id": "q-blocked",
+      "text": "The router blocks two phones: a Huawei P30 Pro and an Android 12 device. Do you remember blocking them, and should they stay blocked?",
+      "devices": [
+        "router-xt8"
+      ]
+    },
+    {
+      "id": "q-blur",
+      "text": "MacBook picture through the KVM is not crisp and display settings revert after switching.",
+      "devices": [
+        "macbook-work",
+        "hub-arcdock",
+        "kvm-ugreen",
+        "monitor-g70b"
+      ]
+    },
+    {
+      "id": "q-dock-kvm",
+      "text": "Does the ArcDock's HDMI work through the KVM's PC2 input?",
+      "devices": [
+        "hub-arcdock",
+        "kvm-ugreen"
+      ]
+    },
+    {
+      "id": "q-wifi-and-wire",
+      "text": "The Mac mini is on Wi-Fi and 2.5G Ethernet at once. Ethernet is first in the service order, so this is harmless, but Wi-Fi could be turned off.",
+      "devices": [
+        "mac-mini"
+      ]
+    },
+    {
+      "id": "q-spares",
+      "text": "Three adapters and a dock are unused. The built-in Mac mini port is 1G, so the 2.5G adapter earns its place; the rest may be redundant.",
+      "devices": [
+        "adapter-ugreen-5g",
+        "adapter-belkin-inc012",
+        "dock-ugreen-m4"
+      ]
+    },
+    {
+      "id": "q-switch-ports",
+      "text": "Which switch port holds which cable (NAS, Mac mini, mesh node, dock)? The numbers on the map are from the plan.",
+      "devices": [
+        "switch-sg105m2"
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": "bedroom",
+      "name": "Bedroom"
+    },
+    {
+      "id": "office",
+      "name": "Home Office"
+    },
+    {
+      "id": "hallway",
+      "name": "Hallway"
+    },
+    {
+      "id": "bathroom",
+      "name": "Bathroom"
+    },
+    {
+      "id": "living",
+      "name": "Living Room"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen"
+    }
+  ],
+  "router": {
+    "readAt": "2026-11-20",
+    "blocked": [
+      {
+        "mac": "C2:EF:E0:55:B0:72",
+        "name": "android-dhcp-12",
+        "randomizedMac": true,
+        "note": "An Android 12 device, by the name it sent. Not in the router's current client list."
+      },
+      {
+        "mac": "D2:6C:C3:BB:B4:F5",
+        "name": "HUAWEI_P30_Pro-0a1b2c3d4e",
+        "randomizedMac": true,
+        "note": "A Huawei P30 Pro, by the name it sent. Not in the router's current client list."
+      }
+    ],
+    "remembered": "The router remembers 57 clients. Most of the ones not in this inventory are private (random) Apple addresses that are no longer in use.",
+    "oldNames": "Names Alex gave in the router for devices no longer seen: Eufy RoboVac, WD MyCloud, Philips Avent Camera."
+  }
+}

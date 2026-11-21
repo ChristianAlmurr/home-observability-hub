@@ -1,0 +1,608 @@
+{
+  "schema": 2,
+  "site": {
+    "name": "Small Flat",
+    "subnet": "192.168.1.0/24",
+    "gateway": "192.168.1.1",
+    "surveyedAt": "2026-11-21"
+  },
+  "rooms": [
+    {
+      "id": "living",
+      "name": "Living Room"
+    },
+    {
+      "id": "study",
+      "name": "Study"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen"
+    },
+    {
+      "id": "bedroom",
+      "name": "Bedroom"
+    },
+    {
+      "id": "hallway",
+      "name": "Hallway"
+    }
+  ],
+  "zones": [
+    {
+      "id": "living",
+      "name": "Living room",
+      "room": "living"
+    },
+    {
+      "id": "study-desk",
+      "name": "Desk",
+      "room": "study"
+    },
+    {
+      "id": "study",
+      "name": "Study",
+      "room": "study"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "room": "kitchen"
+    },
+    {
+      "id": "bedroom",
+      "name": "Bedroom",
+      "room": "bedroom"
+    },
+    {
+      "id": "hallway",
+      "name": "Hallway cupboard",
+      "room": "hallway"
+    },
+    {
+      "id": "unplaced",
+      "name": "Unplaced",
+      "note": "On the network, room not known"
+    },
+    {
+      "id": "outside",
+      "name": "Outside",
+      "note": "Beyond the home"
+    }
+  ],
+  "openQuestions": [],
+  "devices": [
+    {
+      "id": "internet",
+      "name": "Internet",
+      "kind": "internet",
+      "zone": "outside",
+      "verified": "reported",
+      "vendor": "Fibre provider",
+      "model": "Fibre internet",
+      "ports": [],
+      "net": []
+    },
+    {
+      "id": "router",
+      "name": "Archer AX55",
+      "kind": "router",
+      "zone": "hallway",
+      "verified": "live",
+      "vendor": "TP-Link",
+      "model": "Archer AX55",
+      "ports": [
+        {
+          "id": "wan",
+          "label": "WAN",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-1",
+          "label": "LAN 1",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-2",
+          "label": "LAN 2",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-3",
+          "label": "LAN 3",
+          "type": "rj45"
+        },
+        {
+          "id": "lan-4",
+          "label": "LAN 4",
+          "type": "rj45"
+        }
+      ],
+      "net": [
+        {
+          "ip": "192.168.1.1",
+          "medium": "ethernet"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "switch-study",
+      "name": "Study switch",
+      "kind": "switch",
+      "zone": "study",
+      "verified": "reported",
+      "vendor": "Netgear",
+      "model": "GS305",
+      "ports": [
+        {
+          "id": "p1",
+          "label": "P1",
+          "type": "rj45"
+        },
+        {
+          "id": "p2",
+          "label": "P2",
+          "type": "rj45"
+        },
+        {
+          "id": "p3",
+          "label": "P3",
+          "type": "rj45"
+        },
+        {
+          "id": "p4",
+          "label": "P4",
+          "type": "rj45"
+        },
+        {
+          "id": "p5",
+          "label": "P5",
+          "type": "rj45"
+        }
+      ],
+      "net": [],
+      "probe": {
+        "type": "inferred"
+      }
+    },
+    {
+      "id": "desktop",
+      "name": "Studio desktop",
+      "kind": "computer",
+      "zone": "study",
+      "verified": "live",
+      "vendor": "Apple",
+      "model": "Mac Studio",
+      "ports": [
+        {
+          "id": "eth",
+          "label": "Ethernet",
+          "type": "rj45"
+        },
+        {
+          "id": "tb-1",
+          "label": "Thunderbolt 1",
+          "type": "usb-c"
+        },
+        {
+          "id": "tb-2",
+          "label": "Thunderbolt 2",
+          "type": "usb-c"
+        }
+      ],
+      "net": [
+        {
+          "ip": "192.168.1.20",
+          "medium": "ethernet",
+          "if": "en0"
+        }
+      ],
+      "probe": {
+        "type": "self"
+      }
+    },
+    {
+      "id": "printer",
+      "name": "Laser printer",
+      "kind": "printer",
+      "zone": "study",
+      "verified": "live",
+      "vendor": "Brother",
+      "model": "HL-L2350DW",
+      "ports": [
+        {
+          "id": "eth",
+          "label": "Ethernet",
+          "type": "rj45"
+        }
+      ],
+      "net": [
+        {
+          "ip": "192.168.1.30",
+          "medium": "ethernet"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "tv",
+      "name": "Living room TV",
+      "kind": "tv",
+      "zone": "living",
+      "verified": "live",
+      "vendor": "LG",
+      "model": "OLED C3",
+      "ports": [
+        {
+          "id": "eth",
+          "label": "Ethernet",
+          "type": "rj45"
+        },
+        {
+          "id": "hdmi-1",
+          "label": "HDMI 1",
+          "type": "hdmi"
+        }
+      ],
+      "net": [
+        {
+          "ip": "192.168.1.40",
+          "medium": "ethernet"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "laptop",
+      "name": "Work laptop",
+      "kind": "computer",
+      "zone": "study-desk",
+      "verified": "reported",
+      "vendor": "Lenovo",
+      "model": "ThinkPad T14",
+      "ports": [
+        {
+          "id": "usbc-1",
+          "label": "USB-C 1",
+          "type": "usb-c"
+        },
+        {
+          "id": "usbc-2",
+          "label": "USB-C 2",
+          "type": "usb-c"
+        }
+      ],
+      "net": [
+        {
+          "ip": "192.168.1.50",
+          "medium": "wifi"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "dock",
+      "name": "USB-C dock",
+      "kind": "hub",
+      "zone": "study-desk",
+      "verified": "reported",
+      "vendor": "Anker",
+      "model": "PowerExpand 8-in-1",
+      "ports": [
+        {
+          "id": "host",
+          "label": "USB-C host",
+          "type": "usb-c"
+        },
+        {
+          "id": "hdmi",
+          "label": "HDMI",
+          "type": "hdmi"
+        },
+        {
+          "id": "usba-1",
+          "label": "USB-A 1",
+          "type": "usb-a"
+        },
+        {
+          "id": "usba-2",
+          "label": "USB-A 2",
+          "type": "usb-a"
+        },
+        {
+          "id": "eth",
+          "label": "Ethernet",
+          "type": "rj45"
+        },
+        {
+          "id": "pd",
+          "label": "USB-C power in",
+          "type": "usb-c"
+        }
+      ],
+      "net": []
+    },
+    {
+      "id": "monitor",
+      "name": "Desk monitor",
+      "kind": "display",
+      "zone": "study-desk",
+      "verified": "reported",
+      "vendor": "Dell",
+      "model": "U2723QE",
+      "ports": [
+        {
+          "id": "hdmi-in",
+          "label": "HDMI in",
+          "type": "hdmi"
+        },
+        {
+          "id": "dp-in",
+          "label": "DisplayPort in",
+          "type": "dp"
+        }
+      ],
+      "net": []
+    },
+    {
+      "id": "keyboard",
+      "name": "Keyboard",
+      "kind": "peripheral",
+      "zone": "study-desk",
+      "verified": "reported",
+      "vendor": "Keychron",
+      "model": "K2",
+      "ports": [
+        {
+          "id": "usb",
+          "label": "USB-C",
+          "type": "usb-c"
+        }
+      ],
+      "net": []
+    },
+    {
+      "id": "headphones",
+      "name": "Headphones",
+      "kind": "headphones",
+      "zone": "study-desk",
+      "verified": "live",
+      "vendor": "Sony",
+      "model": "WH-1000XM5",
+      "ports": [],
+      "net": [
+        {
+          "medium": "bluetooth"
+        }
+      ]
+    },
+    {
+      "id": "phone-robin",
+      "name": "Robin's phone",
+      "kind": "phone",
+      "zone": "unplaced",
+      "verified": "live",
+      "vendor": "Apple",
+      "model": "iPhone 15",
+      "ports": [],
+      "net": [
+        {
+          "ip": "192.168.1.101",
+          "medium": "wifi"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "phone-kim",
+      "name": "Kim's phone",
+      "kind": "phone",
+      "zone": "unplaced",
+      "verified": "live",
+      "vendor": "Google",
+      "model": "Pixel 8",
+      "ports": [],
+      "net": [
+        {
+          "ip": "192.168.1.102",
+          "medium": "wifi"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "speaker-kitchen",
+      "name": "Kitchen speaker",
+      "kind": "speaker",
+      "zone": "kitchen",
+      "verified": "live",
+      "vendor": "Sonos",
+      "model": "One",
+      "ports": [],
+      "net": [
+        {
+          "ip": "192.168.1.60",
+          "medium": "wifi"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "thermostat",
+      "name": "Thermostat",
+      "kind": "sensor",
+      "zone": "hallway",
+      "verified": "live",
+      "vendor": "tado",
+      "model": "Smart Thermostat X",
+      "ports": [],
+      "net": [
+        {
+          "ip": "192.168.1.61",
+          "medium": "wifi"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "tablet",
+      "name": "Tablet",
+      "kind": "tablet",
+      "zone": "bedroom",
+      "verified": "live",
+      "vendor": "Apple",
+      "model": "iPad Air",
+      "ports": [],
+      "net": [
+        {
+          "ip": "192.168.1.103",
+          "medium": "wifi"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "host-77",
+      "name": "Host .77",
+      "kind": "unknown",
+      "zone": "unplaced",
+      "verified": "live",
+      "ports": [],
+      "net": [
+        {
+          "ip": "192.168.1.77"
+        }
+      ],
+      "probe": {
+        "type": "ping"
+      }
+    },
+    {
+      "id": "old-router",
+      "name": "Old router",
+      "kind": "router",
+      "zone": "study",
+      "verified": "reported",
+      "vendor": "Netgear",
+      "model": "R6400 (not in use)",
+      "ports": [],
+      "net": []
+    }
+  ],
+  "links": [
+    {
+      "id": "l-internet-router",
+      "from": "internet",
+      "to": "router:wan",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "verified": "reported",
+      "evidence": "The fibre box is part of the wall socket; the router's WAN port is plugged into it."
+    },
+    {
+      "id": "l-router-switch",
+      "from": "router:lan-1",
+      "to": "switch-study:p1",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "verified": "reported",
+      "speed": "1G"
+    },
+    {
+      "id": "l-router-tv",
+      "from": "router:lan-2",
+      "to": "tv:eth",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "verified": "reported"
+    },
+    {
+      "id": "l-switch-desktop",
+      "from": "switch-study:p2",
+      "to": "desktop:eth",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "verified": "live",
+      "speed": "1G"
+    },
+    {
+      "id": "l-switch-printer",
+      "from": "switch-study:p3",
+      "to": "printer:eth",
+      "cable": "ethernet",
+      "carries": [
+        "network"
+      ],
+      "verified": "reported"
+    },
+    {
+      "id": "l-laptop-dock",
+      "from": "laptop:usbc-1",
+      "to": "dock:host",
+      "cable": "usb-c",
+      "carries": [
+        "video",
+        "usb",
+        "power"
+      ],
+      "verified": "plan"
+    },
+    {
+      "id": "l-dock-monitor",
+      "from": "dock:hdmi",
+      "to": "monitor:hdmi-in",
+      "cable": "hdmi",
+      "carries": [
+        "video"
+      ],
+      "verified": "plan"
+    },
+    {
+      "id": "l-dock-keyboard",
+      "from": "dock:usba-1",
+      "to": "keyboard:usb",
+      "cable": "usb",
+      "carries": [
+        "usb"
+      ],
+      "verified": "plan"
+    },
+    {
+      "id": "l-bt-headphones",
+      "from": "headphones",
+      "to": "laptop",
+      "cable": "bluetooth",
+      "carries": [
+        "audio"
+      ],
+      "verified": "live"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+data/state/
+data/*.json
+!data/.keep
+knowledge/*
+!knowledge/README.md
+__pycache__/
+*.pyc
+.DS_Store

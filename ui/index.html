@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<meta name="color-scheme" content="dark light">
+<title>Home Observability Hub</title>
+<link rel="icon" href="brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="brand/icon-180.png">
+<link rel="manifest" href="brand/manifest.webmanifest">
+<link rel="preload" href="fonts/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/map.css">
+<link rel="stylesheet" href="css/views.css">
+<link rel="stylesheet" href="css/net.css">
+<link rel="stylesheet" href="css/threats.css">
+<script>
+  // Shows a plain message if the interface itself breaks, instead of a blank page.
+  window.__hmErrors = [];
+  window.__hmError = function (e) {
+    var msg = (e && (e.stack || e.message)) || String(e);
+    window.__hmErrors.push(msg);
+    var el = document.getElementById('boot-error');
+    if (el) { el.hidden = false; el.querySelector('pre').textContent = window.__hmErrors.slice(-3).join('\n\n'); }
+  };
+  window.addEventListener('error', function (e) { window.__hmError(e.error || e.message); });
+  window.addEventListener('unhandledrejection', function (e) { window.__hmError(e.reason); });
+  try { var t = JSON.parse(localStorage.getItem('hm.theme') || '"dark"'); if (t === 'system') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; if (t === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
+</script>
+</head>
+<body>
+<div id="app" class="app" data-list="auto" data-right="closed" data-drawer="closed"></div>
+<div id="boot-error" class="boot-error" role="alert" hidden>
+  <strong>The interface hit an error.</strong> Reload the page. If it keeps happening, this is what it said:
+  <pre></pre>
+  <button type="button" onclick="this.parentNode.hidden = true">Dismiss</button>
+</div>
+<noscript><p style="padding:16px;font:14px sans-serif">Home Observability Hub needs JavaScript to draw the map.</p></noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "home": { "name": "Example House", "owner": "Alex" },
+  "network": { "subnet": "10.20.0.0/24", "gateway": "10.20.0.1", "extraNets": ["192.168.100.1/32"] },
+  "router": { "type": "asuswrt", "deviceId": "router-xt8", "user": "admin",
+              "sshKey": "~/.config/home-observability-hub-test/no-such-key", "keychainService": "home-observability-hub-test-no-such-item",
+              "writes": true },
+  "host": { "deviceId": "mac-mini" },
+  "protected": [],
+  "handsOff": [ { "id": "macbook-work", "ips": ["10.20.0.182", "10.20.0.43"], "names": ["MACM-EXAMPLE01"], "why": "managed by an employer" } ],
+  "secretDirs": ["~/.ssh", "~/.example-vault"],
+  "homeAssistant": { "url": "", "tokenFile": "~/.config/home-observability-hub-test/no-such-token" },
+  "server": { "port": 8799, "allowedHosts": [] }
+}

@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "network": {
+    "spineY": 440,
+    "pos": {
+      "internet": [60,440],
+      "modem-cableco": [175,440],
+      "router-xt8": [330,440],
+      "node-xt8": [800,440],
+      "switch-sg105m2": [950,440],
+      "hue-bridge": [200,596],
+      "mediabox-cableco": [85,596],
+      "nas-f4423": [950,630],
+      "adapter-ugreen-25g": [1085,340],
+      "mac-mini": [1215,340],
+      "hub-arcdock": [1085,550],
+      "macbook-work": [1215,550],
+      "kvm-ugreen": [1320,445],
+      "monitor-g70b": [1425,340],
+      "streamdeck-neo": [1425,550],
+      "usb-audio": [1110,205],
+      "keyboard": [1320,205],
+      "mouse": [1425,205]
+    },
+    "hull": {"x":256,"y":376,"w":618,"h":128},
+    "remote": [[60,300],[175,300],[60,190],[175,190],[60,80],[175,80]],
+    "auto": [[1085,690],[1200,690],[1315,690],[1425,690]],
+    "shelf": {"x":[1085,1200,1315,1425],"y":830,"dy":96}
+  },
+  "wiring": {
+    "grid": 10,
+    "world": {"w":1420,"h":1040},
+    "home": {"x":0,"y":0,"w":1420,"h":760},
+    "zones": [
+      {"id":"office","x":20,"y":4,"w":1380,"h":736,"title":"Home Office","note":"Desk, network shelf and spares are all in this room","level":0,"zones":["office"]},
+      {"id":"desk","x":40,"y":40,"w":1340,"h":450,"note":"On the desk","level":1,"zones":["desk"]},
+      {"id":"rack","x":40,"y":530,"w":1060,"h":190,"note":"Under the desk or on the shelf","level":1,"zones":["rack"]},
+      {"id":"tv","x":740,"y":800,"w":640,"h":220,"title":"Living Room › TV corner","tip":"Where the internet comes in: modem, main router and Hue Bridge","level":0,"zones":["living-wired"]}
+    ],
+    "nodes": {
+      "mac-mini": {"x":80,"y":80,"w":200,"rows":4,"ports":{"tb-1":{"side":"r","row":0},"tb-3":{"side":"r","row":1},"tb-2":{"side":"r","row":2}},"free":{"side":"l","row":3}},
+      "adapter-ugreen-25g": {"x":80,"y":250,"w":200,"rows":1,"ports":{"usbc":{"side":"t","x":160},"eth":{"side":"l","row":0}}},
+      "usb-audio": {"x":300,"y":250,"w":200,"rows":0,"ports":{"usb":{"side":"t","x":350}}},
+      "macbook-work": {"x":80,"y":360,"w":200,"rows":1,"ports":{"usbc-1":{"side":"r","row":0}}},
+      "hub-arcdock": {"x":360,"y":360,"w":200,"rows":3,"ports":{"host":{"side":"l","row":0},"hdmi":{"side":"r","row":0},"usba-1":{"side":"r","row":1},"eth":{"side":"b","x":540}},"free":{"side":"l","row":2}},
+      "kvm-ugreen": {"x":660,"y":80,"w":260,"rows":17,"ports":{"pc1":{"side":"l","row":0},"pc2-hdmi":{"side":"l","row":14},"pc2-usb":{"side":"l","row":15},"out":{"side":"r","row":0},"usb-1":{"side":"r","row":5}},"free":{"side":"r","row":16}},
+      "monitor-g70b": {"x":1120,"y":80,"w":240,"rows":1,"ports":{"hdmi-in":{"side":"l","row":0}},"free":{"side":"r","row":0}},
+      "streamdeck-neo": {"x":1120,"y":180,"w":240,"rows":1,"ports":{"usb":{"side":"l","row":0}}},
+      "keyboard": {"x":1120,"y":290,"w":240,"rows":0,"ports":{}},
+      "mouse": {"x":1120,"y":390,"w":240,"rows":0,"ports":{}},
+      "nas-f4423": {"x":80,"y":600,"w":200,"rows":1,"ports":{"lan-1":{"side":"r","row":0}},"free":{"side":"l","row":0}},
+      "switch-sg105m2": {"x":400,"y":600,"w":300,"rows":1,"ports":{"p1":{"side":"l","row":0},"p3":{"side":"r","row":0},"p2":{"side":"t","x":440},"p4":{"side":"t","x":540}},"free":{"side":"c","row":0}},
+      "node-xt8": {"x":800,"y":600,"w":280,"rows":1,"ports":{"lan-1":{"side":"l","row":0}},"free":{"side":"r","row":0}},
+      "modem-cableco": {"x":770,"y":840,"w":190,"rows":1,"ports":{"lan-1":{"side":"r","row":0},"coax":{"side":"b","x":830}}},
+      "internet": {"x":770,"y":950,"w":190,"rows":0,"ports":{}},
+      "mediabox-cableco": {"x":1015,"y":950,"w":160,"rows":0,"ports":{"eth":{"side":"t","x":1155,"end":true}}},
+      "router-xt8": {"x":1060,"y":840,"w":240,"rows":1,"ports":{"wan":{"side":"l","row":0}},"free":{"side":"r","row":0}},
+      "hue-bridge": {"x":1185,"y":950,"w":185,"rows":0,"ports":{"eth":{"side":"t","x":1205}}}
+    },
+    "plan": {
+      "x": 20, "y": 780, "w": 680, "h": 420, "ox": 40, "oy": 816, "rowH": 22, "headH": 28,
+      "rooms": {
+        "bedroom": {"x":0,"y":0,"w":460,"h":110},
+        "office": {"x":0,"y":110,"w":242,"h":110,"note":"Wi-Fi only; wired devices are above"},
+        "hallway": {"x":242,"y":110,"w":218,"h":110},
+        "bathroom": {"x":460,"y":150,"w":172,"h":70},
+        "living": {"x":0,"y":220,"w":380,"h":150},
+        "kitchen": {"x":380,"y":220,"w":253,"h":150}
+      },
+      "cards": {
+        "spares": {"x":1120,"y":548,"w":240},
+        "unplaced": {"x":740,"y":1050,"w":310},
+        "remote": {"x":1070,"y":1050,"w":310}
+      },
+      "extra": {"x":740,"y":1140,"w":310},
+      "trunk": {"fromX":920,"y":765,"toX":360}
+    },
+    "looseEnds": {
+      "l-router-hue": {"a":{"side":"b","x":1205,"unknown":true}},
+      "l-router-mediabox": {"a":{"side":"b","x":1155,"unknown":true}},
+      "l-internet-modem": {"a":{"side":"t","x":830,"bare":true}},
+      "l-router-node": {"a":{"side":"t","x":1120,"bare":true},"b":{"side":"b","x":920,"bare":true}}
+    },
+    "routes": {
+      "l-mini-audio": [[350,160]],
+      "l-mini-adapter": [[300,180],[300,220],[160,220]],
+      "l-adapter-switch": [[60,310],[60,510],[440,510]],
+      "l-router-node": [[1120,765],[920,765]]
+    },
+    "labelAt": {
+      "l-hub-switch": {"x":540,"y":510},
+      "l-router-node": {"x":920,"y":700}
+    }
+  }
+}

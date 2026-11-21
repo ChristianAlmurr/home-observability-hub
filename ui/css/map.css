@@ -1,0 +1,204 @@
+/* The wiring map, the chain view and everything that draws cables. */
+
+.c-usbc { --c: var(--cable-usbc); } .c-hdmi { --c: var(--cable-hdmi); } .c-usb { --c: var(--cable-usb); }
+.c-ethernet { --c: var(--cable-ethernet); } .c-mesh { --c: var(--cable-mesh); }
+
+.mapwrap { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--bg-canvas); }
+svg.map { position: absolute; inset: 0; background: var(--bg-canvas); touch-action: none; user-select: none; -webkit-user-select: none; cursor: default; }
+svg.map.panning, svg.map.grab { cursor: grabbing; }
+svg.map:focus-visible { outline: 2px solid var(--selection); outline-offset: -2px; }
+svg.map text { font-family: var(--font-sans); fill: var(--text); pointer-events: none; }
+.grid-dot { fill: var(--grid-dot); } .grid-line { fill: none; stroke: var(--grid-line); stroke-width: 1; }
+
+.zone rect { fill: var(--bg-zone); stroke: var(--border-subtle); stroke-width: 1; vector-effect: non-scaling-stroke; }
+svg.map .zone-label { font-size: 11px; fill: var(--text-muted); }
+svg.map .zone-label .zt { fill: var(--text); font-weight: 600; }
+
+/* nodes */
+.node { cursor: pointer; }
+.node .body { fill: var(--bg-node); stroke: var(--border); stroke-width: 1; stroke-linecap: round; }
+.node:hover .body, .node.hov .body { stroke: var(--border-strong); fill: var(--bg-hover); }
+.node.s-offline .body { stroke: var(--status-offline); }
+svg.map .node.s-offline .name { fill: var(--text-muted); }
+svg.map .node .name { font-size: 13px; font-weight: 600; }
+svg.map .node .sub { font: 11px var(--font-mono); fill: var(--text-muted); }
+.node .kind { fill: none; stroke: var(--text-subtle); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.node .divider, .card .divider { stroke: var(--border-subtle); stroke-width: 1; }
+svg.map .plabel { font: 11px var(--font-mono); fill: var(--text-muted); }
+svg.map .port.on .plabel { fill: var(--text); }
+svg.map .plabel.out { font-size: var(--text-11); fill: var(--text-muted); }
+.port .stub { fill: var(--bg-canvas); stroke: var(--border); stroke-width: 1; }
+.port.on .stub { fill: var(--c); stroke: var(--c); }
+.port.hl .stub { stroke: var(--text); stroke-width: 1.5; }
+.port.off { opacity: .3; }
+svg.map .free { font: var(--text-11) var(--font-mono); fill: var(--text-subtle); pointer-events: auto; }
+.sel-ring { fill: none; stroke: none; }
+.node.sel .sel-ring { stroke: var(--selection); stroke-width: 2; }
+.wan path { stroke: var(--cable-ethernet); stroke-width: 2; stroke-dasharray: 1 4; stroke-linecap: round; fill: none; }
+.wan .stub { fill: var(--bg-canvas); stroke: var(--border); }
+.kvm-inside path { fill: none; stroke: var(--border-subtle); stroke-width: 1; }
+.kvm-inside path.on { stroke: var(--text-subtle); stroke-width: 1.25; }
+svg.map .kvm-note { font: var(--text-11) var(--font-mono); fill: var(--text-subtle); }
+svg.map .kvm-note.strong { fill: var(--text-muted); }
+.pulse { fill: none; stroke: currentColor; stroke-width: 1.5; animation: pulse var(--dur-pulse) ease-out 1 forwards; transform-origin: center; transform-box: fill-box; color: var(--text); }
+@keyframes pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(1.8); opacity: 0; } }
+
+/* cables */
+.link { cursor: pointer; }
+.link .cable { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; }
+.link.t-reported .cable { stroke-linecap: round; }
+.link .cable.mesh-a { stroke-width: 5; } .link .cable.mesh-b { stroke: var(--bg-canvas); stroke-width: 3; }
+.link .hit { fill: none; stroke: transparent; stroke-width: 14; }
+.link .halo { fill: none; stroke: none; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+.link:hover .cable:not(.mesh-a):not(.mesh-b), .link.hov .cable:not(.mesh-a):not(.mesh-b), .link.sel .cable:not(.mesh-a):not(.mesh-b), .link.lit .cable:not(.mesh-a):not(.mesh-b) { stroke-width: 3; }
+.link:hover .mesh-a, .link.hov .mesh-a, .link.sel .mesh-a, .link.lit .mesh-a { stroke-width: 7; }
+.link.sel .halo { stroke: var(--selection); opacity: .3; }
+.link.suspect .halo { stroke: var(--danger); opacity: .35; }
+.link.suspect .halo { animation: suspect var(--dur-pulse) ease-out 1; }
+@keyframes suspect { from { stroke-width: 24; opacity: .7; } }
+.link.off { display: none; }
+.link.inactive { opacity: .25; }
+.link.inactive .hit { pointer-events: stroke; }
+.junction { fill: var(--cable-mesh); }
+.trunk { cursor: default; }
+.wifi-line { fill: none; stroke: var(--cable-mesh); stroke-width: 2; stroke-dasharray: 1 4; stroke-linecap: round; }
+
+.pill rect { fill: var(--bg-canvas); }
+svg.map .pill text { font: 11px var(--font-mono); fill: var(--text-muted); }
+.pill.p-speed rect { stroke: var(--border-subtle); stroke-width: 1; }
+svg.map .pill.p-speed text { fill: var(--text); }
+.link.slow .pill.p-speed rect { stroke: var(--caution); stroke-width: 1.5; }
+svg.map .link.down .pill.p-label text { fill: var(--danger-text); }
+.marker .m-bg { fill: var(--bg-canvas); }
+.marker path { fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.marker.down path { stroke: var(--status-offline); stroke-width: 2.2; }
+.marker.risk path { stroke: var(--bg-canvas); stroke-width: 1.5; } .marker.risk .tri { fill: var(--caution); stroke: var(--caution); stroke-width: 1.5; }
+svg.map .marker.unknown text { font: 600 11px var(--font-mono); fill: var(--status-unknown); }
+.marker.unknown .m-bg { stroke: var(--status-unknown); stroke-width: 1; }
+
+/* Wi-Fi room cards */
+.card .card-body { fill: var(--bg-node); stroke: var(--border-subtle); stroke-width: 1; }
+svg.map .card-title { font-size: 12px; font-weight: 600; }
+svg.map .card-count { font: 11px var(--font-mono); fill: var(--text-muted); }
+.wrow { cursor: pointer; }
+.wrow-bg { fill: transparent; }
+.wrow:hover .wrow-bg, .wrow.hov .wrow-bg { fill: var(--bg-hover); }
+.wrow.sel .wrow-bg { fill: var(--bg-active); stroke: var(--selection); stroke-width: 1.5; }
+svg.map .wname { font-size: var(--text-12); }
+svg.map .wrow.offline .wname { fill: var(--text-muted); }
+svg.map .wip { font: 11px var(--font-mono); fill: var(--text-muted); }
+
+/* dimming */
+.node, .link, .wrow, .zone, .card, .trunk { transition: opacity var(--dur-panel) var(--ease); }
+.faded { opacity: .28; }
+svg.map[data-dim="hover"] .node.dim, svg.map[data-dim="hover"] .link.dim { opacity: .4; }
+svg.map[data-dim="sel"] .node.dim, svg.map[data-dim="sel"] .link.dim { opacity: .35; }
+svg.map[data-dim="strong"] .node.dim, svg.map[data-dim="strong"] .link.dim, svg.map[data-dim="strong"] .wrow.dim { opacity: var(--cable-dimmed-opacity); }
+svg.map[data-dim="strong"] .zone.dim, svg.map[data-dim="strong"] .trunk.dim { opacity: .5; }
+svg.map[data-dim] .link.inactive.dim { opacity: .12; }
+
+/* zoom detail levels */
+svg.map[data-detail="low"] .plabel, svg.map[data-detail="low"] .sub, svg.map[data-detail="low"] .free, svg.map[data-detail="low"] .pill,
+svg.map[data-detail="low"] .kvm-note, svg.map[data-detail="low"] .wip { display: none; }
+svg.map[data-layer="wifi"] .node .plabel, svg.map[data-layer="wifi"] .node .free { display: none; }
+svg.map.mini { cursor: pointer; }
+svg.map.mini .plabel, svg.map.mini .sub, svg.map.mini .free, svg.map.mini .pill, svg.map.mini .kvm-note, svg.map.mini .wip, svg.map.mini .zone-label tspan:not(.zt), svg.map.mini .marker { display: none; }
+svg.map.mini .zone-label { font-size: 22px; } svg.map.mini .node .name { font-size: 20px; } svg.map.mini .kind { display: none; }
+svg.map.mini .link .cable { stroke-width: 4; } svg.map.mini .link.lit .cable:not(.mesh-a):not(.mesh-b) { stroke-width: 7; } svg.map.mini .link .cable.mesh-a { stroke-width: 8; } svg.map.mini .link .cable.mesh-b { stroke-width: 4; }
+svg.map.mini .wname { font-size: 13px; }
+
+/* toolbar and floating controls */
+.map-tools { position: absolute; left: var(--space-3); top: var(--space-3); right: var(--space-3); display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; pointer-events: none; z-index: 2; }
+.map-tools > * { pointer-events: auto; box-shadow: var(--shadow-1); }
+.map-tools .tag { height: 24px; box-shadow: none; background: var(--bg-active); color: var(--text); }
+.map-tools .btn, .map-tools .seg { background: var(--bg-panel); }
+.map-tools .seg-label { box-shadow: none; font-size: var(--text-12); color: var(--text-muted); margin-right: -2px; background: var(--bg-canvas); padding: 2px 4px; }
+.zoomer { position: absolute; right: var(--space-3); bottom: var(--space-3); display: flex; align-items: center; z-index: 2; background: var(--bg-panel); border: 1px solid var(--border); box-shadow: var(--shadow-1); }
+.zoomer button { width: 30px; height: 30px; display: grid; place-items: center; color: var(--text-muted); }
+.zoomer button:hover { background: var(--bg-hover); color: var(--text); }
+.zoomer .pct { min-width: 46px; text-align: center; font: 12px var(--font-mono); color: var(--text-muted); border-left: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); height: 30px; line-height: 30px; }
+.map-foot { position: absolute; left: var(--space-3); bottom: var(--space-3); right: 180px; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); z-index: 2; pointer-events: none; }
+.map-foot > * { pointer-events: auto; max-width: 100%; }
+.traybar { flex: none; background: var(--bg-panel); border-top: 1px solid var(--border-subtle); }
+.tray { display: flex; align-items: center; flex-wrap: wrap; min-height: 28px; }
+.tray > button { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 var(--space-3) 0 var(--space-2); color: var(--text-muted); font-size: var(--text-12); white-space: nowrap; }
+.tray > button:hover { color: var(--text); }
+.tray[data-open="true"] > button .ic { transform: rotate(90deg); }
+.tray .items { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px var(--space-2); }
+.tray[data-open="false"] .items { display: none; }
+.pathbar { background: var(--bg-panel); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-2); padding: var(--space-2); max-height: 164px; overflow: auto; }
+.pathbar .ph { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-12); color: var(--text-muted); margin-bottom: 4px; }
+.pathbar .ph b { color: var(--text); font-weight: 600; }
+.pathbar .strip + .strip { margin-top: 2px; }
+
+/* path strip */
+.strip { display: flex; align-items: center; gap: 0; overflow-x: auto; white-space: nowrap; padding: 2px 0; scrollbar-width: thin; }
+.strip-dev { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; background: var(--bg-hover); font-size: var(--text-12); flex: none; }
+.strip-dev:hover { background: var(--bg-active); }
+.strip-gap { padding: 0 8px; color: var(--text-muted); }
+.strip-hop { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 4px; flex: none; font: 11px var(--font-mono); color: var(--text-muted); }
+.strip-hop .p { max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.strip-hop .line { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 56px; padding: 0 10px; height: 20px; }
+.strip-hop .line::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; margin-top: -1px; border-top: 2px solid var(--c); }
+.strip-hop.t-plan .line::before { border-top-style: dashed; } .strip-hop.t-reported .line::before { border-top-style: dotted; }
+.strip-hop.c-mesh .line::before { border-top: 1px solid var(--c); border-bottom: 1px solid var(--c); height: 5px; margin-top: -2.5px; }
+.strip-hop .line em { position: relative; font-style: normal; background: var(--bg-panel); padding: 0 4px; color: var(--text); }
+.strip-hop .line svg { position: absolute; top: -9px; left: 50%; margin-left: -6px; color: var(--danger-text); background: var(--bg-panel); }
+.strip-hop:hover { background: var(--bg-hover); } .strip-hop:hover .line em { background: var(--bg-hover); }
+.strip-hop.suspect { outline: 2px solid var(--danger); outline-offset: -2px; padding: 0 8px; margin: 0 2px; }
+.strip-hop.suspect .line::before { border-top-color: var(--danger); }
+.strip-hop.slow .line em { box-shadow: 0 0 0 1px var(--caution); }
+.strip.vertical { flex-direction: column; align-items: flex-start; white-space: normal; overflow: visible; }
+.strip.vertical .strip-hop { margin-left: 14px; padding-left: 12px; border-left: 2px solid var(--c); height: auto; min-height: 30px; flex-wrap: wrap; }
+.strip.vertical .strip-hop.t-plan { border-left-style: dashed; } .strip.vertical .strip-hop.t-reported { border-left-style: dotted; }
+.strip.vertical .strip-hop .line::before { display: none; } .strip.vertical .strip-hop .line { padding: 0; min-width: 0; }
+.strip.vertical .strip-hop .line svg { position: static; margin: 0 4px 0 0; }
+.strip.vertical .strip-hop.suspect { outline: 0; border-left-color: var(--danger); background: var(--tint-danger); margin-left: 14px; }
+.strip.vertical .strip-gap { display: none; }
+
+/* legend */
+.legend { width: 280px; }
+.legend .lg { display: grid; grid-template-columns: 40px 1fr; gap: 6px var(--space-2); align-items: center; font-size: var(--text-12); }
+.legend .sw { display: block; height: 0; border-top: 2px solid var(--c, var(--text-muted)); }
+.legend .sw.dashed { border-top-style: dashed; } .legend .sw.dotted { border-top-style: dotted; }
+.legend .sw.mesh { border-top: 1px solid var(--c); border-bottom: 1px solid var(--c); height: 5px; }
+.legend .g { justify-self: center; }
+.legend p { font-size: var(--text-12); color: var(--text-muted); margin-top: var(--space-2); line-height: 1.4; }
+
+/* chain view (phone) */
+.chain { flex: 1; min-height: 0; overflow: auto; background: var(--bg-canvas); padding-bottom: var(--space-6); }
+.chain-tools { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 4px var(--space-3); background: var(--bg-panel); border-bottom: 1px solid var(--border-subtle); overflow-x: auto; scrollbar-width: none; }
+.chain-tools::-webkit-scrollbar { display: none; }
+.chain h2 { display: flex; align-items: baseline; gap: var(--space-2); padding: var(--space-4) var(--space-3) var(--space-1); font-size: var(--text-12); font-weight: 600; color: var(--text-muted); }
+.chain h2 span { font-weight: 400; }
+.chain .cdev { display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 44px; padding: 0 var(--space-3); background: var(--bg-panel); border-top: 1px solid var(--border-subtle); }
+.chain .cdev[aria-current="true"] { background: var(--bg-active); box-shadow: inset 2px 0 0 var(--selection); }
+.chain .cdev .name { font-weight: 600; } .chain .cdev .meta { font: 12px var(--font-mono); color: var(--text-muted); flex: none; }
+.chain .cdev.offline .name { color: var(--text-muted); }
+.chain .hops { background: var(--bg-panel); padding: 0 var(--space-3) var(--space-2) 21px; }
+.chain .hop { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; width: 100%; min-height: 30px; padding: 4px 0 4px 12px; border-left: 2px solid var(--c); font-size: var(--text-12); color: var(--text-muted); text-align: left; }
+.chain .hop.t-plan { border-left-style: dashed; } .chain .hop.t-reported { border-left-style: dotted; }
+.chain .hop.inactive { opacity: .35; }
+.chain .hop b { color: var(--text); font-weight: 400; }
+.chain .hop .cab { font-family: var(--font-mono); font-size: 11px; color: var(--c); }
+.chain .hop .nc { font-size: 11px; }
+.chain .note { padding: var(--space-1) var(--space-3) var(--space-2); font-size: var(--text-12); color: var(--text-muted); line-height: 1.4; }
+
+@media (max-width: 767px) {
+  .map-tools { left: var(--space-2); top: var(--space-2); right: var(--space-2); }
+  .zoomer { right: var(--space-2); bottom: var(--space-2); }
+  .map-foot { left: var(--space-2); right: var(--space-2); bottom: 52px; }
+  .legend { width: auto; }
+}
+
+.link.slow .pill:last-child rect { stroke: var(--caution); stroke-width: 1.5; }
+.pathbar { max-height: 124px; }
+
+/* Home Office frame, its areas, and the room plan */
+.zone.lv0 rect { stroke: var(--border); }
+.zone.lv1 rect { stroke-dasharray: 2 3; fill: none; }
+svg.map .zone.lv0 > .zone-label .zt { font-size: 12px; }
+.card.room .card-body { fill: var(--bg-zone); stroke: var(--border); }
+svg.map .card-empty { font-size: var(--text-11); fill: var(--text-subtle); font-style: italic; }
+.trunk.lit .mesh-a { stroke-width: 7; }
+svg.map.mini .card-empty { display: none; } svg.map.mini .card-title { font-size: 18px; }

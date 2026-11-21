@@ -1,0 +1,705 @@
+#!/usr/bin/env python3
+"""hoh: the Home Observability Hub command line.
+
+    python3 bin/hoh doctor [--json]          is everything in place? each check says how to fix it
+    python3 bin/hoh scan [--diff] [--json]   read-only network discovery (discover.py)
+    python3 bin/hoh check                    validate data/inventory.json and data/layout.json
+    python3 bin/hoh service install|uninstall
+    python3 bin/hoh start|stop|restart|status|logs [-f]
+    python3 bin/hoh open                     open the hub in the browser
+    python3 bin/hoh router setup-key [--user U] [--test]
+    python3 bin/hoh ha set-token             reads the Home Assistant token from stdin, no echo
+    python3 bin/hoh version
+
+Standard library only; works with /usr/bin/python3 (3.9). Environment: HOH_LABEL (launchd label, default
+com.home-observability-hub.server), HOH_LAUNCH_AGENTS (where the plist goes, default ~/Library/LaunchAgents),
+HM_PORT, HM_STATE_DIR, HM_SITE, HM_INVENTORY, HOH_CONFIG_DIR. Every HM_* variable set when you run
+`service install` is written into the service's environment.
+"""
+import json
+import os
+import platform
+import re
+import shutil
+import stat
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from xml.sax.saxutils import escape
+
+REPO = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, REPO)
+
+VERSION = "0.1.0"
+DEFAULT_LABEL = "com.home-observability-hub.server"
+OK, WARN, FAIL = "OK", "WARN", "FAIL"
+
+
+# ================================================================ basics
+
+def label():
+    return os.environ.get("HOH_LABEL") or DEFAULT_LABEL
+
+
+def agents_dir():
+    return os.path.expanduser(os.environ.get("HOH_LAUNCH_AGENTS") or "~/Library/LaunchAgents")
+
+
+def plist_path():
+    return os.path.join(agents_dir(), label() + ".plist")
+
+
+def state_dir():
+    return os.environ.get("HM_STATE_DIR") or os.path.join(REPO, "data", "state")
+
+
+def site():
+    """(site dict, problems). Never raises."""
+    try:
+        import site_config as S
+        return S.load()
+    except Exception as e:
+        return {"network": {}, "router": {}, "homeAssistant": {}, "server": {}}, ["site_config failed: %s" % e]
+
+
+def config_dir():
+    try:
+        import site_config as S
+        return S.config_dir()
+    except Exception:
+        return os.path.expanduser(os.environ.get("HOH_CONFIG_DIR") or "~/.config/home-observability-hub")
+
+
+def port():
+    if os.environ.get("HM_PORT"):
+        return int(os.environ["HM_PORT"])
+    s, _ = site()
+    try:
+        return int((s.get("server") or {}).get("port") or 8799)
+    except (TypeError, ValueError):
+        return 8799
+
+
+def run(argv, timeout=10, stdin=None):
+    try:
+        p = subprocess.run(argv, input=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout,
+                           text=True, errors="replace")
+        return p.returncode, p.stdout, p.stderr
+    except subprocess.TimeoutExpired:
+        return 124, "", "timed out after %ss" % timeout
+    except OSError as e:
+        return 127, "", str(e)
+
+
+def python_bin():
+    return "/usr/bin/python3" if os.path.exists("/usr/bin/python3") else sys.executable
+
+
+def http_json(path, timeout=3.0):
+    """(status, parsed or text) from the local hub. status None when nothing answers."""
+    url = "http://127.0.0.1:%d%s" % (port(), path)
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json"}), timeout=timeout) as r:
+            body = r.read(1 << 20).decode("utf-8", "replace")
+            st = r.status
+    except urllib.error.HTTPError as e:
+        return e.code, ""
+    except Exception as e:
+        return None, str(e)
+    try:
+        return st, json.loads(body)
+    except ValueError:
+        return st, body
+
+
+def hub_answers(timeout=3.0):
+    """(ok, which route answered, detail)."""
+    st, body = http_json("/api/setup", timeout)
+    if st == 200:
+        return True, "/api/setup", body
+    if st == 404:
+        st2, body2 = http_json("/api/health", timeout)
+        if st2 == 200:
+            return True, "/api/health", body2
+    return False, None, ("HTTP %s" % st) if st else body
+
+
+def port_in_use(p):
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(0.5)
+    try:
+        return s.connect_ex(("127.0.0.1", p)) == 0
+    finally:
+        s.close()
+
+
+def find_claude():
+    for c in (shutil.which("claude"), os.path.expanduser("~/.local/bin/claude"), "/opt/homebrew/bin/claude",
+              "/usr/local/bin/claude", os.path.expanduser("~/.claude/local/claude")):
+        if c and os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    return None
+
+
+def gui_domain():
+    return "gui/%d" % os.getuid()
+
+
+def service_loaded():
+    rc, out, _ = run(["/bin/launchctl", "print", "%s/%s" % (gui_domain(), label())], timeout=8)
+    if rc != 0:
+        return None
+    info = {"raw": out}
+    m = re.search(r"\bpid = (\d+)", out)
+    info["pid"] = int(m.group(1)) if m else None
+    m = re.search(r"last exit code = (.+)", out)
+    info["lastExit"] = m.group(1).strip() if m else None
+    m = re.search(r"\bstate = (\S+)", out)
+    info["state"] = m.group(1) if m else None
+    return info
+
+
+# ================================================================ plist
+
+PASS_ENV_RE = re.compile(r"^HM_[A-Z0-9_]+$")
+
+
+def service_env():
+    """HM_* variables set now go into the service (except HM_PORT, which has its own key)."""
+    return {k: v for k, v in sorted(os.environ.items()) if PASS_ENV_RE.match(k) and k not in ("HM_PORT", "HM_QUIET")}
+
+
+def render_plist(template, lbl, repo, python, state, home, port_, env=None, path=None):
+    path = path or ":".join(["/usr/bin", "/bin", "/usr/sbin", "/sbin", "/opt/homebrew/bin", "/usr/local/bin",
+                             os.path.join(home, ".local", "bin")])
+    extra = "".join("    <key>%s</key><string>%s</string>\n" % (escape(k), escape(str(v))) for k, v in sorted((env or {}).items()))
+    vals = {"LABEL": lbl, "REPO": repo, "PYTHON": python, "STATE": state, "HOME": home, "PORT": str(port_), "PATH": path}
+    out = template
+    for k, v in vals.items():
+        out = out.replace("{{%s}}" % k, escape(v))
+    out = out.replace("{{ENV}}", extra)
+    left = re.findall(r"\{\{[A-Z]+\}\}", out)
+    if left:
+        raise ValueError("template placeholders not filled: %s" % ", ".join(left))
+    return out
+
+
+def rendered():
+    with open(os.path.join(REPO, "deploy", "launchd.plist.template")) as f:
+        tpl = f.read()
+    return render_plist(tpl, label(), REPO, python_bin(), os.path.abspath(state_dir()), os.path.expanduser("~"), port(),
+                        service_env())
+
+
+# ================================================================ doctor
+
+def check_doctor():
+    res = []
+
+    def add(cid, status, text, fix=None):
+        res.append({"id": cid, "status": status, "text": text, "fix": fix})
+
+    if platform.system() != "Darwin":
+        add("macos", FAIL, "This is %s, not macOS." % platform.system(), "The hub runs on a Mac.")
+    else:
+        v = platform.mac_ver()[0]
+        major = int((v or "0").split(".")[0] or 0)
+        add("macos", OK if major >= 12 else WARN, "macOS %s" % v,
+            None if major >= 12 else "macOS 12 or newer is what the hub is tested on.")
+
+    pv = sys.version_info
+    if pv < (3, 9):
+        add("python", FAIL, "Python %d.%d is too old." % pv[:2], "Install the Command Line Tools: xcode-select --install")
+    else:
+        sysp = "/usr/bin/python3" if os.path.exists("/usr/bin/python3") else None
+        add("python", OK, "Python %s (%s); the service uses %s" % (platform.python_version(), sys.executable, python_bin()),
+            None if sysp else "No /usr/bin/python3: the service will use %s." % sys.executable)
+
+    c = find_claude()
+    if not c:
+        add("claude", WARN, "Claude Code is not installed (needed for /setup and the Ask agent).",
+            "curl -fsSL https://claude.ai/install.sh | bash")
+    else:
+        rc, out, _ = run([c, "--version"], timeout=10)
+        ver = (out.strip().splitlines() or ["?"])[0]
+        rc2, st, _ = run([c, "auth", "status", "--json"], timeout=15)
+        logged = None
+        try:
+            d = json.loads(st)
+            logged = bool(d.get("loggedIn"))
+            how = d.get("authMethod")
+        except ValueError:
+            how = None
+        if logged is True:
+            add("claude", OK, "Claude Code %s at %s, logged in (%s)" % (ver, c, how or "?"))
+        elif logged is False:
+            add("claude", WARN, "Claude Code %s is installed but not logged in." % ver, "Run: claude auth login")
+        else:
+            add("claude", OK, "Claude Code %s at %s (login state not readable)" % (ver, c))
+
+    s, probs = site()
+    try:
+        import site_config as S
+        det = S.detect()
+    except Exception:
+        det = {}
+    gw = (s.get("network") or {}).get("gateway")
+    if not det.get("gateway"):
+        add("network", FAIL, "This Mac has no default route: it is not on a network.", "Connect to the home Wi-Fi or Ethernet.")
+    else:
+        rc, _, _ = run(["/sbin/ping", "-c", "1", "-t", "2", "-n", gw], timeout=5)
+        if rc == 0:
+            add("network", OK, "Gateway %s answers (subnet %s, via %s)" % (gw, (s.get("network") or {}).get("subnet"),
+                                                                         det.get("interface")))
+        else:
+            import socket
+            tcp = False
+            for p in (80, 443, 53):
+                try:
+                    socket.create_connection((gw, p), timeout=1.5).close()
+                    tcp = True
+                    break
+                except OSError:
+                    pass
+            if tcp:
+                add("network", OK, "Gateway %s answers on TCP (it ignores ping)" % gw)
+            else:
+                add("network", FAIL, "The gateway %s does not answer although this Mac has a default route via %s."
+                    % (gw, det.get("interface")),
+                    "macOS is probably blocking local network access: System Settings > Privacy & Security > Local Network, "
+                    "switch it on for Terminal (or iTerm, or the app you run Claude Code in), then run this again. "
+                    "A sandboxed shell has the same effect.")
+
+    site_file = os.environ.get("HM_SITE") or os.path.join(REPO, "data", "site.json")
+    if not os.path.exists(site_file):
+        add("site", WARN, "No data/site.json yet: the hub runs on detected defaults.", "Type /setup in Claude Code.")
+    elif probs:
+        add("site", FAIL, "data/site.json: " + "; ".join(probs), "Fix the file, or run /setup to rewrite it.")
+    else:
+        add("site", OK, "%s: home %r, router type %s" % (site_file, (s.get("home") or {}).get("name"),
+                                                                    (s.get("router") or {}).get("type")))
+
+    inv = os.environ.get("HM_INVENTORY") or os.path.join(REPO, "data", "inventory.json")
+    if not os.path.exists(inv):
+        add("inventory", WARN, "No data/inventory.json yet.", "Type /setup in Claude Code.")
+    else:
+        rc, out, err = run([sys.executable, os.path.join(REPO, "bin", "inventory_check.py"), inv, "--json"], timeout=30)
+        try:
+            d = json.loads(out)
+            if d.get("ok"):
+                add("inventory", OK, "%s: %d devices, %d links, %d warnings"
+                    % (inv, d.get("devices", 0), d.get("links", 0), len(d.get("warnings") or [])))
+            else:
+                e = d.get("errors") or [{}]
+                add("inventory", FAIL, "data/inventory.json has %d errors; first: %s: %s"
+                    % (len(e), e[0].get("where"), e[0].get("text")), "python3 bin/inventory_check.py shows them all.")
+        except ValueError:
+            add("inventory", FAIL, "inventory_check failed: %s" % (err or out)[:200], "python3 bin/inventory_check.py")
+
+    lc = os.path.join(REPO, "bin", "layout_check.py")
+    lay = os.path.join(REPO, "data", "layout.json")
+    if os.path.exists(lc) and (os.path.exists(lay) or os.path.exists(inv)):
+        rc, out, err = run([sys.executable, lc], timeout=60)
+        last = ((out or err).strip().splitlines() or [""])[-1][:200]
+        add("layout", OK if rc == 0 else FAIL, "layout_check: %s" % (last or "exit %d" % rc),
+            None if rc == 0 else "python3 bin/layout_check.py shows the details.")
+    elif not os.path.exists(lc):
+        add("layout", OK, "No bin/layout_check.py in this version; layout not checked.")
+
+    p = port()
+    loaded = service_loaded()
+    ans, route, detail = hub_answers(2.0)
+    if loaded and ans:
+        add("service", OK, "Service %s running (pid %s), answering %s on port %d" % (label(), loaded.get("pid"), route, p))
+    elif loaded:
+        add("service", FAIL, "Service %s is loaded but port %d does not answer (%s); last exit %s"
+            % (label(), p, detail, loaded.get("lastExit")), "python3 bin/hoh logs, then python3 bin/hoh restart")
+    elif ans:
+        add("service", WARN, "Port %d answers (%s) but the launchd service %s is not loaded: something else, or a "
+            "foreground run, is serving it." % (p, route, label()),
+            "If that is this hub run by hand, fine. Otherwise set server.port in data/site.json.")
+    elif port_in_use(p):
+        add("service", FAIL, "Port %d is taken by another program." % p,
+            "Choose a free port in data/site.json (server.port), then python3 bin/hoh service install.")
+    else:
+        add("service", WARN, "The service is not installed (port %d is free)." % p, "python3 bin/hoh service install")
+
+    cd = config_dir()
+    if os.path.isdir(cd):
+        mode = stat.S_IMODE(os.stat(cd).st_mode)
+        add("config-dir", OK if mode & 0o077 == 0 else WARN, "%s mode %o" % (cd, mode),
+            None if mode & 0o077 == 0 else "chmod 700 %s" % cd)
+    else:
+        add("config-dir", WARN, "%s does not exist." % cd, "sh install.sh creates it (mode 700).")
+
+    rt = s.get("router") or {}
+    if (rt.get("type") or "none").lower() == "asuswrt":
+        key = os.path.expanduser(os.environ.get("HM_ROUTER_KEY") or rt.get("sshKey") or "")
+        if not key or not os.path.isfile(key):
+            add("router", FAIL, "router.type is asuswrt but there is no SSH key at %s." % key,
+                "python3 bin/hoh router setup-key")
+        else:
+            mode = stat.S_IMODE(os.stat(key).st_mode)
+            rc, out, err = run(ssh_argv(key, rt.get("user") or "admin", gw) + ["nvram get productid"], timeout=15)
+            if rc == 0 and out.strip():
+                add("router", OK if mode & 0o077 == 0 else WARN, "Router SSH works: %s%s" % (
+                    out.strip().splitlines()[0][:40], "" if mode & 0o077 == 0 else " (key mode %o, should be 600)" % mode),
+                    None if mode & 0o077 == 0 else "chmod 600 %s" % key)
+            else:
+                add("router", FAIL, "Router SSH with the key failed: %s" % ssh_error(err, rc),
+                    "Check Administration > System on the router: Enable SSH LAN only, the public key pasted in "
+                    "Authorized Keys. python3 bin/hoh router setup-key --test retries.")
+    else:
+        add("router", OK, "Router access is off (router.type %s): devices are found by sweep, mDNS and SSDP."
+            % (rt.get("type") or "none"))
+
+    ha = s.get("homeAssistant") or {}
+    if ha.get("url"):
+        tf = os.path.expanduser(ha.get("tokenFile") or "")
+        if os.environ.get("HM_HA_TOKEN") or (tf and os.path.isfile(tf)):
+            st, body = ha_check(ha["url"], tf)
+            add("home-assistant", OK if st == 200 else FAIL, "Home Assistant at %s: %s" % (
+                ha["url"], "token accepted" if st == 200 else ("HTTP %s" % st if st else "no answer")),
+                None if st == 200 else "Make a new long-lived token in Home Assistant (your profile, Security), then "
+                                       "python3 bin/hoh ha set-token")
+        else:
+            add("home-assistant", WARN, "Home Assistant is configured at %s but there is no token." % ha["url"],
+                "python3 bin/hoh ha set-token")
+    else:
+        add("home-assistant", OK, "Home Assistant not configured.")
+
+    try:
+        os.makedirs(state_dir(), exist_ok=True)
+        t = os.path.join(state_dir(), ".write-test")
+        with open(t, "w") as f:
+            f.write("x")
+        os.unlink(t)
+        add("state", OK, "%s is writable" % state_dir())
+    except OSError as e:
+        add("state", FAIL, "%s is not writable: %s" % (state_dir(), e), "Check the folder's owner and permissions.")
+    return res
+
+
+def ha_check(url, token_file):
+    tok = os.environ.get("HM_HA_TOKEN")
+    if not tok:
+        try:
+            with open(token_file) as f:
+                tok = f.read().strip()
+        except OSError:
+            return None, None
+    req = urllib.request.Request(url.rstrip("/") + "/api/", headers={"Authorization": "Bearer " + tok})
+    del tok
+    try:
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return r.status, None
+    except urllib.error.HTTPError as e:
+        return e.code, None
+    except Exception:
+        return None, None
+
+
+def cmd_doctor(args):
+    res = check_doctor()
+    if "--json" in args:
+        print(json.dumps({"ok": not any(r["status"] == FAIL for r in res), "checks": res}, indent=1))
+    else:
+        for r in res:
+            print("%-4s %-15s %s" % (r["status"], r["id"], r["text"]))
+            if r.get("fix") and r["status"] != OK:
+                print("     %-15s fix: %s" % ("", r["fix"]))
+    return 1 if any(r["status"] == FAIL for r in res) else 0
+
+
+# ================================================================ scan, check
+
+def cmd_scan(args):
+    return subprocess.call([sys.executable, os.path.join(REPO, "discover.py")] + list(args))
+
+
+def cmd_check(args):
+    rc = subprocess.call([sys.executable, os.path.join(REPO, "bin", "inventory_check.py")] + list(args))
+    lc = os.path.join(REPO, "bin", "layout_check.py")
+    if os.path.exists(lc):
+        rc = max(rc, subprocess.call([sys.executable, lc]))
+    return rc
+
+
+# ================================================================ service
+
+def wait_answer(seconds=25):
+    end = time.time() + seconds
+    while time.time() < end:
+        ok, route, _ = hub_answers(2.0)
+        if ok:
+            return route
+        time.sleep(0.5)
+    return None
+
+
+def cmd_service(args):
+    if not args or args[0] not in ("install", "uninstall"):
+        print("usage: hoh service install|uninstall", file=sys.stderr)
+        return 2
+    pp = plist_path()
+    if args[0] == "install":
+        p = port()
+        if port_in_use(p) and not service_loaded():
+            print("Port %d is taken by another program. Set server.port in data/site.json (or HM_PORT) and try again." % p,
+                  file=sys.stderr)
+            return 1
+        os.makedirs(state_dir(), exist_ok=True)
+        os.makedirs(agents_dir(), exist_ok=True)
+        text = rendered()
+        if service_loaded():
+            run(["/bin/launchctl", "bootout", "%s/%s" % (gui_domain(), label())], timeout=20)
+            time.sleep(0.5)
+        tmp = pp + ".tmp"
+        with open(tmp, "w") as f:
+            f.write(text)
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, pp)
+        rc, out, err = run(["/bin/launchctl", "bootstrap", gui_domain(), pp], timeout=20)
+        if rc != 0:
+            print("launchctl bootstrap failed: %s" % (err or out).strip(), file=sys.stderr)
+            return 1
+        print("Installed %s (%s), port %d" % (label(), pp, p))
+        route = wait_answer()
+        if route:
+            print("Answering on http://127.0.0.1:%d (%s)" % (p, route))
+            return 0
+        print("Not answering yet; see python3 bin/hoh logs", file=sys.stderr)
+        return 1
+    if service_loaded():
+        run(["/bin/launchctl", "bootout", "%s/%s" % (gui_domain(), label())], timeout=20)
+    if os.path.exists(pp):
+        os.unlink(pp)
+        print("Removed %s" % pp)
+    else:
+        print("Not installed (%s)" % pp)
+    return 0
+
+
+def cmd_start(args):
+    if not os.path.exists(plist_path()):
+        print("Not installed: python3 bin/hoh service install", file=sys.stderr)
+        return 1
+    if not service_loaded():
+        rc, out, err = run(["/bin/launchctl", "bootstrap", gui_domain(), plist_path()], timeout=20)
+        if rc != 0:
+            print("launchctl bootstrap failed: %s" % (err or out).strip(), file=sys.stderr)
+            return 1
+    route = wait_answer()
+    print("Running on http://127.0.0.1:%d" % port() if route else "Started, not answering yet: python3 bin/hoh logs")
+    return 0 if route else 1
+
+
+def cmd_stop(args):
+    if not service_loaded():
+        print("Not running (%s)" % label())
+        return 0
+    rc, out, err = run(["/bin/launchctl", "bootout", "%s/%s" % (gui_domain(), label())], timeout=20)
+    print("Stopped %s" % label() if rc == 0 else "launchctl bootout failed: %s" % (err or out).strip())
+    return 0 if rc == 0 else 1
+
+
+def cmd_restart(args):
+    if not service_loaded():
+        return cmd_start(args)
+    rc, out, err = run(["/bin/launchctl", "kickstart", "-k", "%s/%s" % (gui_domain(), label())], timeout=20)
+    if rc != 0:
+        print("launchctl kickstart failed: %s" % (err or out).strip(), file=sys.stderr)
+        return 1
+    time.sleep(1)
+    route = wait_answer()
+    print("Restarted, answering on http://127.0.0.1:%d" % port() if route else "Restarted, not answering yet: python3 bin/hoh logs")
+    return 0 if route else 1
+
+
+def cmd_status(args):
+    info = service_loaded()
+    ok, route, detail = hub_answers(2.0)
+    d = {"label": label(), "plist": plist_path(), "installed": os.path.exists(plist_path()), "loaded": bool(info),
+         "pid": (info or {}).get("pid"), "lastExit": (info or {}).get("lastExit"), "port": port(),
+         "answering": ok, "route": route}
+    if "--json" in args:
+        print(json.dumps(d, indent=1))
+    else:
+        print("%s: %s, %s, pid %s, port %d %s" % (label(), "installed" if d["installed"] else "not installed",
+                                                  "loaded" if d["loaded"] else "not loaded", d["pid"] or "-", d["port"],
+                                                  "answering (%s)" % route if ok else "not answering"))
+    return 0 if (ok or not d["installed"]) else 1
+
+
+def cmd_logs(args):
+    files = [os.path.join(state_dir(), n) for n in ("server.err", "server.log")]
+    if "-f" in args:
+        os.execv("/usr/bin/tail", ["tail", "-n", "40", "-F"] + files)
+    n = 60
+    for a in args:
+        if a.isdigit():
+            n = int(a)
+    for fp in files:
+        print("==> %s <==" % fp)
+        try:
+            with open(fp, errors="replace") as f:
+                print("".join(f.readlines()[-n:]).rstrip())
+        except OSError:
+            print("(none yet)")
+    return 0
+
+
+def cmd_open(args):
+    url = "http://127.0.0.1:%d/" % port()
+    rc, _, _ = run(["/usr/bin/open", url], timeout=10)
+    print(url)
+    return rc
+
+
+# ================================================================ router
+
+def ssh_argv(key, user, host):
+    return ["/usr/bin/ssh", "-T", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", "-o", "IdentitiesOnly=yes",
+            "-o", "StrictHostKeyChecking=accept-new", "-o", "LogLevel=ERROR", "-i", key, "%s@%s" % (user, host)]
+
+
+def ssh_error(err, rc):
+    e = (err or "").strip().lower()
+    if "permission denied" in e:
+        return "the router refused the key (not pasted yet, or SSH password-only)"
+    if "connection refused" in e:
+        return "SSH is switched off on the router (port 22 refused)"
+    if "timed out" in e or rc == 124:
+        return "no answer on SSH in time"
+    if "host key verification failed" in e or "identification has changed" in e:
+        return "the router shows a different SSH identity than before; nothing was sent"
+    return ((err or "").strip().splitlines() or ["exit %s" % rc])[-1][:160]
+
+
+def cmd_router(args):
+    if not args or args[0] != "setup-key":
+        print("usage: hoh router setup-key [--user NAME] [--test]", file=sys.stderr)
+        return 2
+    s, _ = site()
+    rt = s.get("router") or {}
+    user = rt.get("user") or "admin"
+    if "--user" in args and args.index("--user") + 1 < len(args):
+        user = args[args.index("--user") + 1]
+    if not re.match(r"^[A-Za-z0-9._-]{1,32}$", user):
+        print("Not a valid user name: %r" % user, file=sys.stderr)
+        return 2
+    gw = (s.get("network") or {}).get("gateway")
+    cd = config_dir()
+    key = os.path.expanduser(os.environ.get("HM_ROUTER_KEY") or rt.get("sshKey") or os.path.join(cd, "router_ed25519"))
+    os.makedirs(os.path.dirname(key), mode=0o700, exist_ok=True)
+    if os.path.dirname(key) == cd:
+        os.chmod(cd, 0o700)
+    if "--test" not in args:
+        if os.path.exists(key):
+            print("A key already exists at %s; using it." % key)
+        else:
+            host = (platform.node() or "mac").split(".")[0]
+            rc, out, err = run(["/usr/bin/ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C",
+                                "home-observability-hub@%s" % host, "-f", key], timeout=30)
+            if rc != 0:
+                print("ssh-keygen failed: %s" % (err or out).strip(), file=sys.stderr)
+                return 1
+            print("Created %s" % key)
+        os.chmod(key, 0o600)
+        with open(key + ".pub") as f:
+            pub = f.read().strip()
+        print("""
+Public key (safe to share; paste it into the router):
+
+%s
+
+On the router's web page (http://%s, log in as usual):
+  1. Administration > System.
+  2. Enable SSH: LAN only.  Port: 22.
+  3. Allow Password Login: No.
+  4. Authorized Keys: paste the public key above (one line).
+  5. Apply. Wait about 30 seconds.
+  The router's login name (%s) is the SSH user. If yours is different, run:
+  python3 bin/hoh router setup-key --user <name> --test
+
+Then set "router": {"type": "asuswrt", "user": "%s", "sshKey": "%s"} in data/site.json.
+""" % (pub, gw, user, user, key))
+        if "--no-test" in args:
+            return 0
+        print("Testing now (read-only: nvram get productid)...")
+    if not os.path.isfile(key):
+        print("No key at %s: run python3 bin/hoh router setup-key first." % key, file=sys.stderr)
+        return 1
+    rc, out, err = run(ssh_argv(key, user, gw) + ["nvram get productid"], timeout=15)
+    if rc == 0 and out.strip():
+        print("OK: the router answers over SSH: %s" % out.strip().splitlines()[0][:40])
+        return 0
+    print("Not yet: %s. After pasting the key and pressing Apply, run: python3 bin/hoh router setup-key --test"
+          % ssh_error(err, rc))
+    return 1
+
+
+# ================================================================ Home Assistant
+
+def cmd_ha(args):
+    if not args or args[0] != "set-token":
+        print("usage: hoh ha set-token   (reads the token from stdin, nothing is echoed)", file=sys.stderr)
+        return 2
+    if sys.stdin.isatty():
+        import getpass
+        tok = getpass.getpass("Home Assistant long-lived access token (not shown): ")
+    else:
+        tok = sys.stdin.readline()
+    tok = tok.strip()
+    if not tok or len(tok) < 20 or not re.match(r"^[A-Za-z0-9._-]+$", tok):
+        print("That does not look like a Home Assistant token (long, letters, digits, dots, dashes).", file=sys.stderr)
+        return 1
+    s, _ = site()
+    ha = s.get("homeAssistant") or {}
+    cd = config_dir()
+    tf = os.path.expanduser(ha.get("tokenFile") or os.path.join(cd, "ha-token"))
+    os.makedirs(os.path.dirname(tf), mode=0o700, exist_ok=True)
+    if os.path.dirname(tf) == cd:
+        os.chmod(cd, 0o700)
+    tmp = tf + ".tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(tok + "\n")
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, tf)
+    del tok
+    print("Stored in %s (mode 600)." % tf)
+    url = ha.get("url") or "http://127.0.0.1:8123"
+    st, _ = ha_check(url, tf)
+    if st == 200:
+        print("Home Assistant at %s accepts it." % url)
+        return 0
+    print("Home Assistant at %s: %s. %s" % (url, "HTTP %s" % st if st else "no answer",
+                                           "Set homeAssistant.url in data/site.json if it runs elsewhere." if not st else
+                                           "The token was refused: make a new one."))
+    return 1
+
+
+def cmd_version(args):
+    rc, out, _ = run(["/usr/bin/git", "-C", REPO, "describe", "--always", "--dirty", "--tags"], timeout=5)
+    print("home-observability-hub %s%s" % (VERSION, (" (%s)" % out.strip()) if rc == 0 and out.strip() else ""))
+    return 0
+
+
+COMMANDS = {"doctor": cmd_doctor, "scan": cmd_scan, "check": cmd_check, "service": cmd_service, "start": cmd_start,
+            "stop": cmd_stop, "restart": cmd_restart, "status": cmd_status, "logs": cmd_logs, "open": cmd_open,
+            "router": cmd_router, "ha": cmd_ha, "version": cmd_version}
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help", "help") or argv[0] not in COMMANDS:
+        print(__doc__.strip())
+        return 0 if (not argv or argv[0] in ("-h", "--help", "help")) else 2
+    return COMMANDS[argv[0]](argv[1:]) or 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "home": {
+    "name": "Example House",
+    "owner": "Alex"
+  },
+  "network": {
+    "subnet": "10.20.0.0/24",
+    "gateway": "10.20.0.1"
+  },
+  "router": {
+    "type": "none",
+    "deviceId": "router-xt8",
+    "writes": false
+  },
+  "host": {
+    "deviceId": "mac-mini"
+  },
+  "protected": [
+    "switch-sg105m2"
+  ],
+  "handsOff": [
+    {
+      "id": "macbook-work",
+      "ips": [
+        "10.20.0.43",
+        "10.20.0.182"
+      ],
+      "names": [],
+      "why": "a managed work laptop: advice only"
+    }
+  ],
+  "secretDirs": [
+    "~/.ssh",
+    "~/.aws"
+  ]
+}

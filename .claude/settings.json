@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python3 bin/hoh *)",
+      "Bash(/usr/bin/python3 bin/hoh *)",
+      "Bash(python3 discover.py *)",
+      "Bash(python3 discover.py)",
+      "Bash(python3 bin/probe.py *)",
+      "Bash(python3 bin/inventory_check.py*)",
+      "Bash(python3 bin/layout_check.py*)",
+      "Bash(python3 portscan.py*)",
+      "Bash(python3 site_config.py)",
+      "Bash(python3 -m unittest *)",
+      "Bash(/usr/bin/python3 -m unittest *)",
+      "Read(./data/**)",
+      "Read(./knowledge/**)",
+      "Edit(./data/site.json)",
+      "Edit(./data/inventory.json)",
+      "Edit(./data/layout.json)",
+      "Write(./data/site.json)",
+      "Write(./data/inventory.json)",
+      "Write(./data/layout.json)",
+      "Write(./data/state/onboarding.json)",
+      "Edit(./knowledge/**)",
+      "Write(./knowledge/**)"
+    ],
+    "deny": [
+      "Read(~/.config/home-observability-hub/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.netrc)",
+      "Read(~/Library/Keychains/**)",
+      "Bash(cat ~/.config/home-observability-hub/*)",
+      "Bash(security find-generic-password *)",
+      "Bash(security find-internet-password *)",
+      "Bash(security dump-keychain*)",
+      "Bash(security export *)"
+    ]
+  }
+}

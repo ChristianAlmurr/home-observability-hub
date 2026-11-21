@@ -1,0 +1,35 @@
+<!--
+  Home Observability Hub mark, inline, for the top bar (about 20px).
+
+  The house takes currentColor and the node takes --hm-node, so the mark follows the theme
+  from CSS alone and needs no second asset:
+
+    .brand .hm-mark { width: 20px; height: 20px; flex: none; color: #2f62f5; --hm-node: var(--bg-panel); }
+
+  Cobalt #2f62f5 is the family brand colour shared with Agent Hub, Stash and Atnas. It reads
+  on the dark panel (#0C1320) and the light one (#FFFFFF). --hm-node defaults to the panel colour,
+  so the node looks cut out of the house in both themes.
+
+  Optional: the node can carry the live state that .beacon shows today (green when live, grey
+  when not), so the mark and the beacon become one element:
+    .brand .hm-mark.live { --hm-node: var(--status-online); }
+  If you do that, give the brand link the live state as text too, because colour alone does not
+  say "live".
+
+  The node colour sits in style, not in the fill attribute, because a presentation attribute
+  does not resolve var().
+
+  main.js builds the top bar with h(). Use the s() helper from dom.js (SVG namespace) for the
+  same mark; see the bottom of this file.
+-->
+<svg class="hm-mark" viewBox="0 0 32 32" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 4 24 12v12H8V12z"/><rect x="14" y="16" width="4" height="4" style="fill: var(--hm-node, #fff)"/></svg>
+
+<!--
+  In main.js (import s from './dom.js' next to h):
+
+  const brandMark = () => s('svg', { class: 'hm-mark', viewBox: '0 0 32 32', width: 20, height: 20, 'aria-hidden': 'true', focusable: 'false' },
+    s('path', { fill: 'currentColor', d: 'M16 4 24 12v12H8V12z' }),
+    s('rect', { x: 14, y: 16, width: 4, height: 4, style: 'fill: var(--hm-node, #fff)' }));
+
+  h('div', { class: 'brand' }, brandMark(), h('span', { class: 'beacon' ... }), h('span', { class: 'wordmark' }, 'Home Observability Hub'))
+-->

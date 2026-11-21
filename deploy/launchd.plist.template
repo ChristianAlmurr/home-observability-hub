@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Rendered by `python3 bin/hoh service install`. Do not edit the installed copy by hand: re-run the command. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>{{LABEL}}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{{PYTHON}}</string>
+    <string>{{REPO}}/server.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>{{REPO}}</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>StandardOutPath</key><string>{{STATE}}/server.log</string>
+  <key>StandardErrorPath</key><string>{{STATE}}/server.err</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>{{PATH}}</string>
+    <key>HOME</key><string>{{HOME}}</string>
+    <key>HM_PORT</key><string>{{PORT}}</string>
+    <key>HM_QUIET</key><string>1</string>
+{{ENV}}  </dict>
+</dict>
+</plist>

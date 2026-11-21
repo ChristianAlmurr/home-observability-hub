@@ -1,0 +1,275 @@
+/* The network map: the canvas, its nodes and links, the selection bar, the path to the internet and the legend.
+   The panels' parts (chips, actions, the confirmation, Security, the inspector's identity and security) are in views.css. */
+
+.c-bluetooth { --c: var(--cable-bluetooth); } .c-coax { --c: var(--cable-coax); }
+.k-wired { --lc: var(--m-wired); } .k-coax { --lc: var(--m-coax); } .k-wifi, .k-mesh { --lc: var(--m-wifi); } .k-bt { --lc: var(--m-bt); }
+.k-desk, .k-tunnel { --lc: var(--m-desk); } .k-lan { --lc: var(--m-none); }
+
+/* ---------------------------------------------------------------- canvas
+   The map is a calm console: square tiles in the panel step, links as thin lines in their type's colour,
+   and colour that means a state (amber, rose) only where something needs a person. */
+.mapwrap { background: var(--bg-canvas); }
+.net-host, .wire-host { position: absolute; inset: 0; }
+svg.net { position: absolute; inset: 0; touch-action: none; user-select: none; -webkit-user-select: none; cursor: default; }
+svg.net.panning { cursor: grabbing; }
+svg.net:focus-visible { outline: 2px solid var(--selection); outline-offset: -2px; }
+canvas.net-fx { position: absolute; inset: 0; pointer-events: none; }
+svg.net text { font-family: var(--font-sans); pointer-events: none; }
+.map-state { position: absolute; inset: 56px 0 0 0; z-index: 1; }
+.wire-host svg.map { background: transparent; }
+
+/* what does not move: the outside line, the mesh zone, the shelf */
+.outside path { stroke: var(--border-subtle); stroke-width: 1; stroke-dasharray: 2 6; fill: none; }
+svg.net .outside text { font: calc(var(--text-11) * var(--lk, 1)) var(--font-mono); fill: var(--text-subtle); }
+.hull-body { fill: color-mix(in srgb, var(--m-wifi) 4%, transparent); }
+.hull-edge { fill: none; stroke: var(--m-wifi); stroke-opacity: .5; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 2 4; transition: stroke-opacity var(--dur-panel) var(--ease); }
+.hull.lit .hull-edge { stroke-opacity: .7; }
+svg.net .hull-t { font-size: calc(var(--text-11) * var(--lk, 1)); font-weight: 600; fill: var(--m-wifi); }
+svg.net .hull-n { font: calc(var(--text-11) * var(--lk, 1)) var(--font-mono); fill: var(--text-subtle); paint-order: stroke; stroke: var(--bg-canvas); stroke-width: 4px; stroke-linejoin: round; }
+.ripple { fill: none; stroke: var(--m-wifi); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.dock { fill: var(--bg-canvas); stroke: var(--m-wifi); stroke-opacity: .6; stroke-width: 1; } .dock.k-lan { stroke: var(--m-none); }
+.shelf-zone { fill: var(--bg-zone); stroke: var(--border-subtle); stroke-width: 1; stroke-dasharray: 2 4; }
+svg.net .shelf-cap .cap { font-size: calc(var(--text-11) * var(--lk, 1)); font-weight: 600; fill: var(--text-muted); }
+svg.net .shelf-cap .cap2 { font-weight: 400; fill: var(--text-subtle); }
+
+/* ---------------------------------------------------------------- nodes
+   One channel for liveness (how solid the tile is) and one for attention (a corner flag, and the edge in
+   the flag's colour). Online is quiet ink; nothing healthy is coloured. */
+.nn { cursor: pointer; transition: transform var(--dur-move) var(--ease), opacity var(--dur-panel) var(--ease); }
+.nn .pod { transform-origin: 0 0; transition: transform var(--dur-fast) var(--ease), opacity var(--dur-panel) var(--ease); }
+.nn:active .pod { transform: scale(.96); }
+.nn .body { fill: var(--bg-node); transition: fill var(--dur-fast) var(--ease); }
+.nn .ring { fill: none; stroke: var(--edge); stroke-width: 1; vector-effect: non-scaling-stroke; transition: stroke var(--dur-trace) var(--ease); }
+.nn .kind { fill: none; stroke: var(--text); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.nn.role-core .body { fill: var(--bg-raised); }
+/* liveness */
+.nn.s-unknown .kind, .nn.s-unmonitored .kind, .nn.s-plan .kind, .nn.s-inferred .kind { stroke: var(--text-muted); }
+.nn.s-degraded .ring { stroke: var(--sec-watch); }
+.nn.s-offline .body, .nn.s-asleep .body { fill: var(--bg-canvas); }
+.nn.s-offline .ring, .nn.s-asleep .ring { stroke-dasharray: 2 3; }
+.nn.s-offline .kind, .nn.s-asleep .kind { stroke: var(--text-subtle); }
+svg.net .nn.s-offline .name { fill: var(--text-muted); }
+.nn.role-shelf .pod { opacity: .55; }
+/* hover and selection */
+.nn .sel-ring, .nn .threat { fill: none; stroke: none; }
+.nn.hov .body, .nn:hover .body { fill: var(--bg-hover); }
+.nn.sel .sel-ring { stroke: var(--selection); stroke-width: 1.5; }
+.nn.sel .body { fill: var(--bg-active); }
+.nn .pulse { fill: none; stroke: var(--text-muted); stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: pulse-out 800ms var(--ease) 1 forwards; }
+@keyframes pulse-out { from { transform: scale(1); opacity: .8; } to { transform: scale(1.5); opacity: 0; } }
+
+/* attention: said without motion first. Edge colour and one flag on the corner, worst first. */
+.nn.id-unidentified .ring { stroke: var(--sec-watch); }
+.nn.sec-watch .ring { stroke: color-mix(in srgb, var(--sec-watch) 60%, var(--edge)); }
+.nn.sec-suspicious .ring { stroke: var(--sec-suspicious); stroke-dasharray: none; stroke-width: 1.5; }
+.nn.sec-suspicious .body { fill: color-mix(in srgb, var(--sec-suspicious) 16%, var(--bg-node)); }
+.nn.sec-suspicious .threat { stroke: var(--sec-suspicious); stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; }
+svg.net .nn.sec-suspicious .name { fill: var(--danger-text); }
+.nn.sec-blocked .ring { stroke: var(--edge); stroke-dasharray: 2 3; } .nn.sec-blocked .body { fill: var(--bg-canvas); } .nn.sec-blocked .kind { stroke: var(--text-subtle); }
+svg.net .nn.sec-blocked .name { fill: var(--text-muted); }
+.badge rect { fill: var(--bg-canvas); stroke: currentColor; stroke-width: 1; }
+svg.net .badge text { font: 700 10px var(--font-mono); fill: currentColor; }
+.badge path { fill: none; stroke: currentColor; stroke-width: 1.5; }
+.badge .pip { fill: currentColor; stroke: none; }
+.b-unidentified, .b-watch { color: var(--caution-text); } .b-blocked { color: var(--danger-text); }
+.b-unidentified rect:first-child { fill: color-mix(in srgb, var(--sec-watch) 18%, var(--bg-canvas)); }
+.b-suspicious { color: var(--sec-suspicious); } .b-suspicious rect:first-child { fill: var(--sec-suspicious); } svg.net .b-suspicious text { fill: var(--on-suspicious); }
+.fresh { display: none; } .nn.new .fresh { display: block; }
+.fresh rect { fill: var(--selection); stroke: var(--bg-canvas); stroke-width: 1.5; }
+
+/* labels: one line by default (the name, wrapped to two when it must); the make and model come in on hover,
+   on selection and when zoomed in. A readable size at any zoom (--ls). */
+.lbl-s { transform: scale(var(--ls, 1)); }
+svg.net .name { font-size: var(--text-12); font-weight: 600; fill: var(--text); paint-order: stroke; stroke: var(--bg-canvas); stroke-width: 3px; stroke-linejoin: round; }
+svg.net .sub { font-size: var(--text-11); fill: var(--text-subtle); paint-order: stroke; stroke: var(--bg-canvas); stroke-width: 3px; stroke-linejoin: round; display: none; }
+svg.net .sub.q { fill: var(--caution-text); }
+svg.net .nn.hov .sub, svg.net .nn.sel .sub, svg.net[data-detail="high"] .sub { display: inline; }
+svg.net[data-detail="low"] .nn .sub, svg.net[data-detail="dots"] .nn .sub, svg.net[data-detail="dots"] .nn:not(.role-core):not(.sel):not(.sec-suspicious) .lbl { display: none; }
+svg.net[data-detail="dots"] .hull-n { display: none; }
+
+/* ---------------------------------------------------------------- links
+   Colour says what the link is made of; opacity says how sure and how alive; nothing else. */
+.nl { cursor: pointer; transition: opacity var(--dur-panel) var(--ease); }
+.nl path { fill: none; }
+.nl .ln { stroke: var(--lc); stroke-width: calc(1.5px * var(--lk, 1)); opacity: .85; transition: stroke-width var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease); }
+.nl .ln2, .nl .flow, .nl .cut { display: none; }
+.nl .hit { stroke: transparent; stroke-width: 14; }
+.nl .halo { stroke: none; stroke-width: 8; }
+.k-wired.t-plan .ln, .k-desk.t-plan .ln, .k-coax.t-plan .ln { stroke-dasharray: 6 4; }
+.k-wired.t-reported .ln, .k-desk.t-reported .ln, .k-coax.t-reported .ln { stroke-dasharray: 1 4; }
+.k-coax .ln { stroke-width: calc(2.5px * var(--lk, 1)); }
+.k-desk .ln { stroke-width: calc(1.25px * var(--lk, 1)); }
+.k-wifi .ln { stroke-dasharray: 2 4; opacity: .75; }
+.k-wifi.t-reported .ln { opacity: .6; }
+.k-wifi.to-hull .ln { stroke-dasharray: 2 7; opacity: .5; }
+.k-wifi.second .ln { opacity: .2; }
+.k-mesh .ln { stroke-width: calc(2.5px * var(--lk, 1)); stroke-dasharray: 2.5 5; opacity: .9; }
+.k-mesh:not(.radio) .ln { stroke-dasharray: none; stroke-width: calc(4px * var(--lk, 1)); } .k-mesh:not(.radio) .ln2 { display: block; stroke: var(--bg-canvas); stroke-width: calc(2px * var(--lk, 1)); }
+.k-bt .ln { stroke-dasharray: 2 3; stroke-width: calc(1.25px * var(--lk, 1)); }
+.k-bt.paired .ln { stroke-dasharray: 1 6; opacity: .4; }
+.k-lan .ln { stroke-dasharray: 2 5; opacity: .5; }
+.k-tunnel .ln { stroke-dasharray: 1 6; opacity: .45; }
+.nl.dead .ln { opacity: .22; }
+.nl.cutlink .ln { stroke: var(--m-none); stroke-dasharray: none; opacity: .4; stroke-width: calc(1px * var(--lk, 1)); }
+.nl.cutlink .cut { display: block; } .cut .gap { stroke: var(--bg-canvas); stroke-width: 8; } .cut .bars { stroke: var(--sec-blocked); stroke-width: 1.5; }
+.nl:hover .ln, .nl.hov .ln { opacity: 1; }
+.nl.lit .ln { opacity: 1; stroke-width: calc(2.25px * var(--lk, 1)); } .nl.k-mesh.lit .ln { stroke-width: calc(3.5px * var(--lk, 1)); } .nl.k-mesh:not(.radio).lit .ln { stroke-width: calc(4.5px * var(--lk, 1)); } .nl.k-coax.lit .ln { stroke-width: calc(3px * var(--lk, 1)); }
+.nl.sel .halo { stroke: var(--selection); opacity: .2; }
+.nl.suspect .halo { stroke: var(--danger); opacity: .35; }
+/* the link speed is a detail: on hover, on the lit path, or zoomed in */
+.nl .tag { display: none; }
+.nl.lit .tag, .nl.hov .tag, .nl:hover .tag, svg.net[data-detail="high"] .nl .tag { display: block; }
+.tag rect { fill: var(--bg-canvas); stroke: var(--lc); stroke-opacity: .5; stroke-width: 1; }
+.tag-s { transform: scale(var(--lk, 1)); }
+svg.net .tag text { font: 500 var(--text-11) var(--font-mono); fill: var(--lc); }
+
+/* dimming */
+.nn.faded, .nl.faded { opacity: .14; }
+svg.net[data-dim="hover"] .nn.dim { opacity: .45; } svg.net[data-dim="hover"] .nl.dim { opacity: .3; }
+svg.net[data-dim="sel"] .nn.dim { opacity: .35; } svg.net[data-dim="sel"] .nl.dim { opacity: .18; }
+svg.net[data-dim="strong"] .nn.dim, svg.net[data-dim="strong"] .nl.dim { opacity: .14; }
+
+/* ---------------------------------------------------------------- motion (only while svg.net has .animating: the tab is visible, the map is on screen, motion is allowed) */
+.nn.enter .pod { animation: pod-in 420ms var(--ease) both; }
+@keyframes pod-in { from { transform: scale(.25); opacity: 0; } }
+.nl.enter { animation: fade-in 500ms var(--ease) both; }
+@keyframes fade-in { from { opacity: 0; } }
+.nn.leave { opacity: 0; transition: opacity 240ms ease-out; pointer-events: none; }
+svg.net.animating .ripple { animation: ripple 6s var(--ease) infinite; }
+@keyframes ripple { 0% { transform: scale(1); opacity: .3; } 100% { transform: scale(3.2); opacity: 0; } }
+svg.net.animating .nn.sec-suspicious .threat { animation: threat 2.4s var(--ease) infinite; }
+@keyframes threat { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.35); opacity: 0; } }
+svg.net.animating .nl.lit:not(.cutlink):not(.k-desk):not(.paired) .flow { display: block; stroke: var(--text); stroke-width: 1; stroke-dasharray: 2 16; opacity: .7; animation: flow 1.4s linear infinite; }
+svg.net.animating .nl.lit.rev .flow { animation-direction: reverse; }
+@keyframes flow { to { stroke-dashoffset: -18; } }
+.sweep { fill: none; stroke: var(--selection); stroke-width: 1; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center; animation: sweep 1.7s var(--ease) forwards; pointer-events: none; }
+@keyframes sweep { 0% { transform: scale(.02); opacity: 0; } 12% { opacity: .22; } 100% { transform: scale(1); opacity: 0; } }
+.nn.tick .ring { animation: tick 620ms ease-out var(--d, 0ms) 1; }
+@keyframes tick { 30% { stroke: var(--text-muted); } }
+@media (prefers-reduced-motion: reduce) {
+  .nn, .nn .pod, .nl { transition: none; }
+  .nn.enter .pod, .nl.enter, .sweep, .nn.tick .ring, .nn .pulse { animation: none; }
+}
+
+/* ---------------------------------------------------------------- map chrome */
+.map-tools .btn, .map-tools .seg, .zoomer, .selbar, .pathbar { background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
+.map-tools > * { box-shadow: var(--shadow-1); }
+.map-tools .btn, .map-tools .seg { border-color: transparent; }
+.map-tools .tag.focus { background: var(--tint-selection); color: var(--info-text); }
+.tool-note { display: inline-flex; align-items: center; gap: 6px; height: var(--control-md); padding: 0 10px; background: var(--tint-caution); color: var(--caution-text); font-size: var(--text-12); box-shadow: none !important; max-width: 100%; }
+.tool-note span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tool-note:hover { text-decoration: underline; }
+.zoomer { border: 0; box-shadow: var(--shadow-1); overflow: hidden; }
+.zoomer .pct { font: 700 12px var(--font-display); }
+.map-foot { align-items: center; right: var(--space-3); padding-right: 168px; }
+.map-foot > .selbar { margin-right: -84px; }
+
+.selbar { width: min(760px, 100%); box-shadow: var(--shadow-3); padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 10px; animation: rise var(--dur-panel) var(--ease); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.selbar.l-suspicious { box-shadow: var(--shadow-3), 0 0 0 1px var(--sec-suspicious); }
+.sb-h { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sb-h .ki { flex: none; width: 34px; height: 34px; display: grid; place-items: center; background: var(--bg-raised); box-shadow: var(--ring); color: var(--text); }
+.who { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.who b { font-weight: 600; } .who .m { font-size: var(--text-12); color: var(--text-muted); }
+
+
+/* the path to the internet */
+.npath { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; min-width: 0; font-size: var(--text-12); }
+.npath.none { color: var(--text-muted); line-height: 1.4; }
+.np-dev { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; background: var(--bg-hover); white-space: nowrap; flex: none; }
+.np-dev:hover { background: var(--bg-active); }
+.np-hop { display: inline-flex; align-items: center; height: 24px; color: var(--lc); white-space: nowrap; flex: none; font-weight: 500; }
+.np-hop i { display: block; width: 14px; height: 0; border-top: 2px solid var(--lc); }
+.np-hop em { font-style: normal; padding: 0 5px; font-size: var(--text-11); }
+.np-hop.k-wifi i, .np-hop.k-mesh i { border-top-style: dotted; } .np-hop.k-bt i { border-top-style: dashed; border-top-width: 1.5px; } .np-hop.k-tunnel i { border-top-style: dotted; }
+.np-hop.k-wired.t-plan i, .np-hop.k-coax.t-plan i { border-top-style: dashed; }
+button.np-hop:hover em { text-decoration: underline; }
+.np-mesh { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; box-shadow: inset 0 0 0 1px var(--m-wifi); color: var(--m-wifi); white-space: nowrap; }
+.np-mesh .nc { font-size: var(--text-11); }
+.npath.vertical { flex-direction: column; align-items: flex-start; gap: 0; }
+.npath.vertical .np-hop { height: 26px; margin-left: 18px; padding-left: 12px; border-left: 2px solid var(--lc); }
+.npath.vertical .np-hop.k-wifi, .npath.vertical .np-hop.k-mesh, .npath.vertical .np-hop.k-tunnel { border-left-style: dotted; } .npath.vertical .np-hop.k-bt, .npath.vertical .np-hop.k-wired.t-plan { border-left-style: dashed; }
+.npath.vertical .np-hop i { display: none; } .npath.vertical .np-hop:not(:has(em)) { height: 10px; }
+
+/* ---------------------------------------------------------------- the verdict (the top bar's own look is in app.css) */
+.verdict-btn, .status-pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; font-size: var(--text-12); font-weight: 600; white-space: nowrap; background: var(--bg-hover); color: var(--text-muted); flex: none; }
+.v-danger, .summary button.v-danger { background: var(--sec-suspicious); color: var(--on-suspicious); }
+.v-caution, .summary button.v-caution { background: var(--tint-caution); color: var(--caution-text); }
+.v-ok, .summary button.v-ok { background: var(--tint-success); color: var(--success-text); }
+.v-info, .summary button.v-info { background: var(--tint-info); color: var(--info-text); }
+.demo-chip { flex: none; height: 22px; padding: 0 8px; display: inline-flex; align-items: center; background: var(--tint-caution); color: var(--caution-text); font-size: var(--text-11); font-weight: 600; white-space: nowrap; }
+
+/* legend samples */
+.lsample path { fill: none; stroke: var(--lc); stroke-width: 2; stroke-linecap: round; }
+.lsample.k-wifi path { stroke-dasharray: .1 5.5; stroke-width: 2.4; } .lsample.to-hull path { stroke-dasharray: .1 9; opacity: .6; }
+.lsample.k-mesh path { stroke-dasharray: .1 7; stroke-width: 6; } .lsample.k-bt path { stroke-dasharray: 2 4; stroke-width: 1.5; } .lsample.k-coax path { stroke-width: 3.2; }
+.lsample.k-desk path { stroke-width: 1.2; opacity: .7; } .lsample.k-lan path { stroke-dasharray: 2 6; } .lsample.t-plan path { stroke-dasharray: 7 5; } .lsample.t-reported path { stroke-dasharray: .1 5; }
+.lmark { justify-self: center; width: 14px; height: 14px; display: grid; place-items: center; font: 700 10px var(--font-mono); box-shadow: inset 0 0 0 1px currentColor; background: var(--bg-canvas); }
+.lmark.b-suspicious { background: var(--sec-suspicious); color: var(--on-suspicious); box-shadow: none; }
+.lmark.b-unidentified { background: color-mix(in srgb, var(--sec-watch) 18%, var(--bg-canvas)); }
+.lmark.b-watch::after { content: ""; width: 4px; height: 4px; background: currentColor; }
+.lmark.b-new { width: 6px; height: 6px; background: var(--selection); box-shadow: none; }
+.lmark.b-blocked { position: relative; } .lmark.b-blocked::after { content: ""; position: absolute; left: 2px; right: 2px; top: 6.25px; height: 1.5px; background: currentColor; transform: rotate(-45deg); }
+.ltile { justify-self: center; cursor: default; }
+.legend { width: 330px; } .legend .lg { grid-template-columns: 46px 1fr; line-height: 1.35; }
+
+/* desk wiring: a Bluetooth flag on a node */
+.btflag .cable { stroke-dasharray: 2 4; stroke-width: 1.5; } .btflag .dot { fill: var(--c); } .btflag .hitbox { fill: transparent; }
+svg.map .btflag .plabel { fill: var(--c); }
+
+/* ---------------------------------------------------------------- narrow screens */
+/* narrower: the counts keep their figures and colour on screen; the words stay for screen readers (and in each count's tooltip) */
+@media (max-width: 1239px) { .summary .cnt span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } .summary .cnt { gap: 0; padding: 0 6px; } }
+@media (max-width: 767px) {
+  .map-foot { padding-right: 0; right: var(--space-2); bottom: var(--space-2); } .map-foot > .selbar { margin-right: 0; }
+  .zoomer { bottom: auto; top: 56px; flex-direction: column; } .zoomer .pct { display: none; }
+  .selbar { padding: 10px; gap: 8px; }
+  .selbar .npath { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -10px; padding: 0 10px; } .selbar .npath::-webkit-scrollbar { display: none; }
+  .selbar .actbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -10px; padding: 1px 10px; } .selbar .actbar::-webkit-scrollbar { display: none; }
+  .selbar .act { height: 36px; flex: none; }
+  .selbar .idc { display: none; } .selbar .secc.ok { display: none; }
+  .tool-note span { display: none; } .tool-note { width: 36px; padding: 0; justify-content: center; min-height: 36px; }
+  .status-pill { min-width: 0; flex: 0 1 auto; overflow: hidden; } .status-pill svg { flex: none; }
+  .demo-chip { padding: 0 6px; } .mode-pill { flex: none; }
+  .topbar .view-title { flex: none; }
+}
+@media (max-width: 767px) { .mapwrap[data-layer="wiring"] .zoomer { top: 104px; } }
+
+/* The first run: no devices yet. A calm panel over the empty canvas; the map's tools step aside. */
+.mapwrap[data-empty="1"] .map-tools, .mapwrap[data-empty="1"] .zoomer, .mapwrap[data-empty="1"] .map-foot { display: none; }
+.welcome-host { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: var(--space-6); overflow: auto; }
+.welcome { width: min(560px, 100%); background: var(--bg-panel); box-shadow: inset 0 0 0 1px var(--border-subtle), inset 0 2px 0 var(--selection); }
+.welcome .wl-inner { padding: var(--space-8) var(--space-8) var(--space-6); }
+.welcome .wl-eyebrow { margin: 0 0 var(--space-2); font: 500 var(--text-12)/1 var(--font-mono); color: var(--text-subtle); }
+.welcome h2 { margin: 0 0 var(--space-3); font-size: var(--text-18); font-weight: 600; line-height: var(--leading-tight); color: var(--text); outline: none; }
+.welcome h3 { margin: var(--space-6) 0 var(--space-2); font-size: var(--text-13); font-weight: 600; color: var(--text); }
+.welcome .wl-lead { margin: 0; font-size: var(--text-14); line-height: var(--leading-body); color: var(--text-muted); max-width: 62ch; }
+.welcome .wl-note { margin: var(--space-3) 0 0; font-size: var(--text-13); line-height: var(--leading-body); color: var(--text-subtle); }
+.welcome code { font: 500 var(--text-13)/1 var(--font-mono); color: var(--text); background: var(--bg-active); padding: 3px 6px; }
+.wl-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; background: var(--border-subtle); box-shadow: 0 0 0 1px var(--border-subtle); }
+.wl-steps li { display: flex; align-items: center; gap: var(--space-3); min-height: 40px; padding: 6px var(--space-3); background: var(--bg-raised); font-size: var(--text-14); color: var(--text); }
+.wl-steps .wl-n { flex: none; width: 20px; height: 20px; display: grid; place-items: center; font: 600 var(--text-12)/1 var(--font-mono); color: var(--selection); box-shadow: inset 0 0 0 1px var(--selection); }
+.wl-steps .wl-s { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.wl-steps .btn { margin-left: 2px; }
+.wl-check { margin-top: var(--space-6); padding-top: var(--space-4); box-shadow: inset 0 1px 0 var(--border-subtle); }
+.wl-check .wl-ch { display: flex; align-items: baseline; justify-content: space-between; }
+.wl-check h3 { margin: 0 0 var(--space-2); }
+.wl-at { font-size: var(--text-12); color: var(--text-subtle); }
+.wl-list { list-style: none; margin: 0; padding: 0; }
+.wl-item { display: grid; grid-template-columns: 18px 128px 1fr; align-items: baseline; gap: var(--space-2); padding: 6px 0; font-size: var(--text-13); box-shadow: inset 0 -1px 0 var(--border-subtle); }
+.wl-item:last-child { box-shadow: none; }
+.wl-item .wl-g { align-self: center; display: grid; }
+.wl-item .wl-k { color: var(--text); font-weight: 600; }
+.wl-item .wl-v { color: var(--text-muted); }
+.wl-item.s-optional .wl-v, .wl-item.s-unknown .wl-v { color: var(--text-subtle); }
+@media (max-width: 767px) {
+  .welcome-host { place-items: start center; padding: var(--space-3); }
+  .welcome .wl-inner { padding: var(--space-5) var(--space-4); }
+  .wl-item { grid-template-columns: 18px 1fr; }
+  .wl-item .wl-v { grid-column: 2; }
+}
+/* the plate behind a node's name: lines run under labels, never through their letters */
+svg.net .lbl-bg { fill: var(--bg-canvas); }
+svg.net[data-detail="dots"] .lbl-bg { display: none; }
+svg.net .hull-n-bg { fill: var(--bg-canvas); }
+svg.net[data-detail="dots"] .hull-n-bg { display: none; }

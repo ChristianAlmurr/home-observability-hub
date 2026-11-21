@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "home": {
+    "name": "Small Flat",
+    "owner": "Robin"
+  },
+  "network": {
+    "subnet": "192.168.1.0/24",
+    "gateway": "192.168.1.1"
+  },
+  "router": {
+    "type": "none",
+    "deviceId": "router"
+  },
+  "host": {
+    "deviceId": "desktop"
+  },
+  "handsOff": [
+    {
+      "id": "laptop",
+      "ips": [
+        "192.168.1.50"
+      ],
+      "names": [],
+      "why": "an employer manages it"
+    }
+  ],
+  "secretDirs": [
+    "~/.ssh",
+    "~/.gnupg"
+  ]
+}

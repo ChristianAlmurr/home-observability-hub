@@ -58,6 +58,7 @@ def scan_claude_hooks(ctx, res):
     files = [cfg.h(".claude", "settings.json"), cfg.h(".claude", "settings.local.json")]
     for d in project_dirs(cfg):
         files += [os.path.join(d, ".claude", "settings.json"), os.path.join(d, ".claude", "settings.local.json")]
+    hook_list = []
     for path in files:
         if U.lstat(path) is None:
             continue
@@ -74,7 +75,7 @@ def scan_claude_hooks(ctx, res):
                     if not isinstance(h, dict):
                         continue
                     cmd = h.get("command") if isinstance(h.get("command"), str) else (h.get("url") if isinstance(h.get("url"), str) else json.dumps(h, sort_keys=True))
-                    hook_reasons(ctx, res, path, str(event), g.get("matcher"), cmd)
+                    hook_list.append(hook_item(ctx, path, str(event), g.get("matcher"), cmd))
         perms = doc.get("permissions") if isinstance(doc.get("permissions"), dict) else {}
         allow = [a for a in perms.get("allow") or [] if isinstance(a, str)]
         broad = [a for a in allow if BROAD_ALLOW.match(a.strip())]
@@ -96,16 +97,21 @@ def scan_claude_hooks(ctx, res):
                                              ("allow rules", "%d, of which %d very broad" % (len(allow), len(broad)), "permissions.allow")],
                                    fix={"text": "Open the file and narrow or remove the broad rules; keep prompts on for shell commands."},
                                    fp=U.digest(mode, *sorted(broad)), baseline=ctx.baseline.first("claude-hooks")))
+    report_hooks(ctx, res, hook_list)
 
 
-def hook_reasons(ctx, res, path, event, matcher, cmd):
+HOOKS_PENDING = "claude-hook:projects:pending"
+
+
+def hook_item(ctx, path, event, matcher, cmd):
+    """What one hook runs, and what is wrong with it, without judging it against the baseline yet."""
     cfg = ctx.cfg
-    key = "claude-hook:%s:%s:%s" % (path, event, U.digest(matcher, cmd)[:12])
+    proj = os.path.dirname(os.path.dirname(path))
     reasons = H.script_reasons(cmd, "hook command")
     script = None
     try:
         for part in shlex.split(cmd):
-            p = os.path.expanduser(part.replace("$CLAUDE_PROJECT_DIR", os.path.dirname(os.path.dirname(path))).replace("${CLAUDE_PROJECT_DIR}", os.path.dirname(os.path.dirname(path))))
+            p = os.path.expanduser(part.replace("$CLAUDE_PROJECT_DIR", proj).replace("${CLAUDE_PROJECT_DIR}", proj))
             if p.startswith("/") and os.path.isfile(p) and not U.within(os.path.realpath(p), "/usr") and not U.within(os.path.realpath(p), "/bin"):
                 script = p
                 break
@@ -123,10 +129,79 @@ def hook_reasons(ctx, res, path, event, matcher, cmd):
     if H.reaches_network(text) and not any(r.code in ("pipe-to-shell", "reverse-shell") for r in reasons):
         reasons.append(U.Reason("hook-network", "This hook reaches the network. A hook runs on every matching tool call with your account's rights and "
                                 "sees what Claude Code is doing, so a hook that talks to another machine can send that out.", "medium", 50))
-    fp = U.digest(cmd, script_hash)
-    scope = "every Claude Code session" if U.within(path, cfg.h(".claude")) else "the project %s" % os.path.basename(os.path.dirname(os.path.dirname(path)))
-    status = ctx.baseline.status(key, fp, "claude-hooks")
-    emit(ctx, res, key, fp, "claude-hooks", reasons,
+    user_level = U.within(path, cfg.h(".claude"))
+    return {"path": path, "event": event, "matcher": matcher, "cmd": cmd, "script": script, "reasons": reasons,
+            "key": "claude-hook:%s:%s:%s" % (path, event, U.digest(matcher, cmd)[:12]), "fp": U.digest(cmd, script_hash),
+            # The same hook in two projects: same event, matcher, command and script text. The path is not part of it.
+            "content": U.digest(event, matcher, cmd, script_hash), "user": user_level,
+            # A project hook that runs a script kept in that project, so the code travels with the project.
+            "local": bool(script) and not user_level and U.within(os.path.realpath(script), os.path.realpath(proj)),
+            "project": None if user_level else os.path.basename(proj)}
+
+
+def report_hooks(ctx, res, items):
+    """Hooks in ~/.claude, hooks with something wrong in them, and hooks whose script lives outside the project
+    are judged one by one. A project hook that runs its own script and shows nothing wrong is judged by its
+    content: the same code already trusted elsewhere joins the baseline quietly, and the rest is one finding
+    for all of them, so a kit copied into seventeen projects is one thing to read and trust, not seventy."""
+    b = ctx.baseline
+    first = b.first("claude-hooks")
+    status = {it["key"]: b.status(it["key"], it["fp"], "claude-hooks") for it in items}
+    plain = [it for it in items if not it["user"] and it["local"] and not it["reasons"]]
+    trusted_content = {it["content"] for it in plain if status[it["key"]] == "known"}
+    plain_keys = {it["key"] for it in plain}
+    pending = []
+    for it in items:
+        if it["key"] not in plain_keys:
+            hook_finding(ctx, res, it, status[it["key"]])
+            continue
+        res.seen.add(it["key"])
+        res.items += 1
+        if status[it["key"]] == "known":
+            continue
+        if it["content"] in trusted_content:
+            b.accept(it["key"], it["fp"])
+        else:
+            pending.append(it)
+    res.seen.add(HOOKS_PENDING)
+    fp = U.digest(*sorted(it["key"] + "=" + it["fp"] for it in pending))
+    if pending and b.get(HOOKS_PENDING) == fp:
+        # The person trusted exactly this set: each hook joins the baseline and the finding is gone.
+        for it in pending:
+            b.accept(it["key"], it["fp"])
+        pending = []
+    if not pending:
+        return
+    projects = sorted({it["project"] for it in pending})
+    groups = {}
+    for it in pending:
+        groups.setdefault(it["content"], []).append(it)
+    changed = sum(1 for it in pending if status[it["key"]] == "changed")
+    what = "%d project%s" % (len(projects), "" if len(projects) == 1 else "s")
+    lines = []
+    for g in sorted(groups.values(), key=lambda g: (-len(g), g[0]["event"])):
+        name = os.path.basename(g[0]["script"])
+        lines.append(("hook", "%s runs %s, the same code in %d project%s" % (U.clean(g[0]["event"], 30), name, len(g), "" if len(g) == 1 else "s")
+                      if len(g) > 1 else "%s runs %s in %s only" % (U.clean(g[0]["event"], 30), name, g[0]["project"]), "hooks"))
+    text = ("%d Claude Code hook%s in %s %s new or changed since the last scan: %d distinct script%s, each kept inside its own project, "
+            "with nothing in them that reaches the network or runs hidden code. Hooks run by themselves with your rights, so read the "
+            "change once; trusting this covers every copy, and a project that later gets the same code is accepted without asking." % (
+                len(pending), "" if len(pending) == 1 else "s", what, "is" if len(pending) == 1 else "are", len(groups), "" if len(groups) == 1 else "s"))
+    reason = U.Reason("changed" if changed == len(pending) else "new", text, "medium", 100, measured=True)
+    res.add(U.make_finding(HOOKS_PENDING, "plugin",
+                           "Claude Code hooks %s in %s" % ("changed" if changed == len(pending) else "added or changed", what),
+                           text, {"type": "setting", "name": "Claude Code project hooks"}, [reason],
+                           evidence=lines[:12] + [("projects", ", ".join(projects[:20]) + (" and more" if len(projects) > 20 else ""), "settings")],
+                           fix={"text": "Read one copy of each script listed. If the change is yours, mark this trusted; a script that differs "
+                                        "in one project only is the one to look at first."},
+                           fp=fp, baseline=first))
+
+
+def hook_finding(ctx, res, it, status):
+    cfg = ctx.cfg
+    path, event, matcher, cmd, script = it["path"], it["event"], it["matcher"], it["cmd"], it["script"]
+    scope = "every Claude Code session" if it["user"] else "the project %s" % it["project"]
+    emit(ctx, res, it["key"], it["fp"], "claude-hooks", it["reasons"],
          "A Claude Code hook was added for %s (%s). A hook is a command that runs by itself, with your rights, each time the event fires." % (scope, U.clean(event, 30)),
          "This Claude Code hook, or the script it runs, changed.", sev_new="high", sev_changed="high", category="plugin",
          title="%s Claude Code hook (%s) in %s" % ("New" if status == "new" else "Changed" if status == "changed" else "Risky", U.clean(event, 30), cfg.show(path)),

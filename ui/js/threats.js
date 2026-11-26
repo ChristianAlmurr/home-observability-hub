@@ -35,6 +35,8 @@ const ACT = {
 };
 const ACT_ORDER = ['quarantine', 'restore', 'trust', 'acknowledge', 'reopen', 'rescan'];
 const NEEDS_CONFIRM = new Set(['trust', 'quarantine', 'restore']);
+const BULK_ORDER = ['acknowledge', 'trust', 'reopen'];
+const PAST = { acknowledge: 'acknowledged', trust: 'trusted', reopen: 'reopened' };
 
 const num = n => (typeof n === 'number' ? n.toLocaleString('en') : '0');
 const sevKey = s => (SEV.includes(s) ? s : 'info');
@@ -469,6 +471,11 @@ export function createThreats() {
   const flt = { sev: null, cat: null, scanner: null, state: 'open' };
   const dflt = () => !flt.sev && !flt.cat && !flt.scanner && flt.state === 'open';
   let rendered = null;   // ids drawn last time, to mark the ones that arrive
+  let picking = false, lastPick = null, bulkBusy = false;
+  const picked = new Set();   // ids ticked in select mode; only ever ones on screen
+  let shownIds = [];
+  const stopPicking = () => { picking = false; picked.clear(); lastPick = null; render(); };
+  el.addEventListener('keydown', e => { if (e.key === 'Escape' && picking && !bulkBusy) { e.stopPropagation(); stopPicking(); } });
 
   function setFlt(patch) {
     Object.assign(flt, patch);
@@ -510,7 +517,26 @@ export function createThreats() {
       lead ? h('p', { class: 'th-lead' }, lead) : null, tiles, notes);
   }
 
+  function pickRow(f, st) {
+    const sk = sevKey(f.severity);
+    const on_ = picked.has(f.id);
+    const cb = h('input', { type: 'checkbox', class: 'f-cb', checked: on_, 'aria-label': 'Select: ' + safeText(f.title), dataset: { fk: 'pick-' + f.id },
+      onClick: e => {
+        const want = e.target.checked;
+        const i = shownIds.indexOf(f.id), j = e.shiftKey && lastPick ? shownIds.indexOf(lastPick) : -1;
+        const range = j >= 0 ? shownIds.slice(Math.min(i, j), Math.max(i, j) + 1) : [f.id];
+        range.forEach(id => (want ? picked.add(id) : picked.delete(id)));
+        lastPick = f.id; render();
+      } });
+    return h('li', null, h('label', { class: 'frow pick s-' + sk + (on_ ? ' picked' : ''), dataset: { id: f.id } },
+      cb, sevChip(f.severity),
+      h('span', { class: 'f-what' }, h('span', { class: 'f-title' }, safeNodes(f.title), f.isNew && f.state === 'open' ? h('span', { class: 'newtag' }, 'new') : null), subjectLine(f)),
+      confMeter(f),
+      h('span', { class: 'f-end' }, f.state !== 'open' ? h('span', { class: 'tag' }, (STATE_LABEL[f.state] || safeText(f.state)).toLowerCase()) : null)));
+  }
+
   function row(f, st, fresh) {
+    if (picking) return pickRow(f, st);
     const sk = sevKey(f.severity);
     const sel = st.route.sel.includes(f.id);
     const seen = f.state === 'resolved' && f.resolvedAt ? h('span', { class: 'seen' }, 'resolved ' + relTime(f.resolvedAt, st.now)) : f.firstSeen ? h('span', { class: 'seen' }, 'first seen ' + relTime(f.firstSeen, st.now)) : null;
@@ -539,6 +565,11 @@ export function createThreats() {
     const pool = flt.state === 'resolved' ? (allDoc ? (allDoc.findings || []).filter(f => f.state === 'resolved') : null) : all.filter(f => f.state === flt.state);
     const shown = pool && pool.filter(f => (!flt.sev || f.severity === flt.sev) && (!flt.cat || f.category === flt.cat) && (!flt.scanner || f.scanner === flt.scanner));
     const cats = [...new Set((pool || []).map(f => f.category).filter(Boolean))];
+    shownIds = shown ? shown.map(f => f.id) : [];
+    const onScreen = new Set(shownIds);
+    [...picked].forEach(id => { if (!onScreen.has(id)) picked.delete(id); });
+    const canPick = flt.state !== 'resolved' && flt.state !== 'quarantined' && shown && shown.length > 1;
+    if (picking && !canPick && !bulkBusy) { picking = false; picked.clear(); }
     const others = STATES.filter(s => s !== 'open' && s !== 'resolved' && count(s) > 0);
 
     // filters: shown when there is something to filter, or a filter is on
@@ -553,6 +584,8 @@ export function createThreats() {
       !dflt() ? h('button', { class: 'linkbtn', type: 'button', dataset: { fk: 'clear' }, onClick: clearFlt }, 'Clear') : null,
       h('span', { class: 'grow' }),
       shown && pool && shown.length !== pool.length ? h('span', { class: 'muted small' }, shown.length + ' of ' + pool.length) : null,
+      canPick ? h('button', { class: 'btn sm', type: 'button', 'aria-pressed': String(picking), dataset: { fk: 'pick' }, disabled: bulkBusy,
+        onClick: () => { if (picking) stopPicking(); else { picking = true; render(); } } }, picking ? 'Done' : 'Select') : null,
     ] : null);
 
     const out = [];
@@ -560,6 +593,7 @@ export function createThreats() {
     else if (allDoc && allDoc.error && flt.state === 'resolved') out.push(errorState(allDoc.error, () => { allDoc = null; loadAll(); render(); }, 'The resolved findings could not be loaded.'));
     else if (shown.length) {
       const ids = new Set(shown.map(f => f.id));
+      if (picking) out.push(bulkBar(shown));
       out.push(h('ul', { class: 'frows', 'aria-label': STATE_LABEL[flt.state] + ' findings' }, shown.map(f => row(f, st, !!rendered && !rendered.has(f.id) && f.isNew))));
       rendered = flt.state === 'open' && dflt() ? ids : rendered;
     } else if (!dflt() && (flt.sev || flt.cat || flt.scanner || flt.state !== 'open')) {
@@ -580,6 +614,77 @@ export function createThreats() {
       ' · ', h('button', { class: 'linkbtn', type: 'button', dataset: { fk: 'o-res' }, onClick: () => setFlt({ state: 'resolved', sev: null }) }, 'resolved')));
     else if (flt.state === 'open' && dflt()) out.push(h('p', { class: 'th-others' }, h('button', { class: 'linkbtn', type: 'button', dataset: { fk: 'o-res' }, onClick: () => setFlt({ state: 'resolved' }) }, 'Resolved findings')));
     swap(listEl, out);
+  }
+
+  function bulkBar(shown) {
+    const sel = shown.filter(f => picked.has(f.id));
+    const all = sel.length === shown.length;
+    const allCb = h('input', { type: 'checkbox', checked: all && sel.length > 0, 'aria-label': all ? 'Select none' : 'Select every finding shown', dataset: { fk: 'pick-all' },
+      onChange: () => { if (all) picked.clear(); else shown.forEach(f => picked.add(f.id)); render(); } });
+    allCb.indeterminate = sel.length > 0 && !all;
+    const btns = BULK_ORDER.map(a => {
+      const fits = sel.filter(f => Array.isArray(f.actions) && f.actions.includes(a));
+      const b = h('button', { class: 'act', type: 'button', disabled: bulkBusy || !fits.length, dataset: { fk: 'bulk-' + a },
+        onClick: () => (NEEDS_CONFIRM.has(a) ? confirmBulk(a, fits) : runBulk(a, fits, b)) },
+        icon(ACT[a].icon, 14), h('span', null, ACT[a].label + (fits.length ? ' ' + fits.length : '')));
+      if (fits.length && fits.length < sel.length) tip(b, plural(sel.length - fits.length, 'selected finding') + ' cannot be ' + PAST[a] + ' and will be left as ' + (sel.length - fits.length === 1 ? 'it is' : 'they are') + '.');
+      return b;
+    });
+    return h('div', { class: 'th-bulk', role: 'toolbar', 'aria-label': 'Act on the selected findings' },
+      h('label', { class: 'check' }, allCb, h('span', { 'aria-live': 'polite' }, sel.length ? sel.length + ' selected' : 'Select findings')),
+      h('span', { class: 'grow' }), btns,
+      h('button', { class: 'btn sm', type: 'button', disabled: bulkBusy, dataset: { fk: 'pick-cancel' }, onClick: stopPicking }, 'Cancel'));
+  }
+
+  async function runBulk(action, list, btn, confirm) {
+    if (bulkBusy || !list.length) return false;
+    bulkBusy = true;
+    if (btn) { btn.disabled = true; fill(btn, h('span', { class: 'spinner' }), h('span', null, ACT[action].doing)); }
+    let res;
+    try {
+      res = await api.threatBulk({ action, ids: list.map(f => f.id), confirm: !!confirm });
+      if (!res || !Array.isArray(res.done)) throw new Error((res && res.error) || 'The server gave no reason.');
+    } catch (e) {
+      bulkBusy = false; render();
+      toast(h('span', null, h('b', null, ACT[action].label + ' did not happen. '), safeText(e.message)), { intent: 'caution' });
+      return false;
+    }
+    bulkBusy = false;
+    res.done.forEach(f => { details.delete(f.id); applyFinding(f); });
+    const failed = res.failed || [];
+    failed.forEach(x => picked.delete(x.id));
+    picking = false; picked.clear(); lastPick = null;
+    const word = PAST[action][0].toUpperCase() + PAST[action].slice(1);
+    toast(failed.length
+      ? h('span', null, h('b', null, word + ': ' + res.done.length + '. '), plural(failed.length, 'finding') + ' could not be: ', safeText(failed[0].error) + (failed.length > 1 ? ' and more.' : '.'))
+      : word + ': ' + plural(res.done.length, 'finding') + '.', { intent: failed.length ? 'caution' : 'success' });
+    loadThreats(); if (allDoc) loadAll();
+    render();
+    return true;
+  }
+
+  /** Trust for many: what is in the set, how bad the worst is, and how to undo it. Cancel has the focus. */
+  function confirmBulk(action, list) {
+    const a = ACT[action];
+    const serious = list.filter(f => f.severity === 'critical' || f.severity === 'high');
+    const by = SEV.map(k => [k, list.filter(f => sevKey(f.severity) === k).length]).filter(x => x[1]);
+    const note = h('div', { class: 'cf-note' });
+    let dlg = null;
+    const cancel = h('button', { class: 'btn', type: 'button', onClick: () => dlg.close() }, 'Cancel');
+    const ok = h('button', { class: 'btn primary', type: 'button', onClick: async () => {
+      cancel.disabled = true; ok.disabled = true; fill(ok, h('span', { class: 'spinner' }), a.doing);
+      if (await runBulk(action, list, null, true)) dlg.close();
+      else { cancel.disabled = false; ok.disabled = false; fill(ok, icon(a.icon, 14), 'Try again'); }
+    } }, icon(a.icon, 14), 'Trust ' + plural(list.length, 'finding'));
+    const body = h('div', { class: 'body confirm-act' },
+      h('div', { class: 'cf-target' }, by.map(([k, n]) => h('span', { class: 'cf-sev' }, sevChip(k), h('span', null, '× ' + n)))),
+      h('ul', { class: 'cf-list' }, list.slice(0, 8).map(f => h('li', null, safeNodes(f.title))), list.length > 8 ? h('li', { class: 'muted' }, 'and ' + (list.length - 8) + ' more') : null),
+      h('dl', { class: 'cf-dl' }, h('dt', null, 'What happens'), h('dd', null, 'Each one is added, as it is now, to the baseline. They leave the open list, and each is raised again only if it changes.'),
+        h('dt', null, 'Undo'), h('dd', null, 'Open any of them under Trusted and choose Reopen.')),
+      serious.length ? callout('caution', plural(serious.length, 'of these is', 'of these are') + ' high or critical. Trust them only if you know what each one is.') : null, note,
+      h('div', { class: 'cf-foot' }, h('span', { class: 'grow muted small' }, 'Each one is written to the audit log.'), cancel, ok));
+    dlg = dialog({ title: 'Trust ' + plural(list.length, 'finding') + '?', body, cls: 'cf r-change' });
+    cancel.focus({ preventScroll: true });
   }
 
   function renderCover(st, lv) {

@@ -119,11 +119,24 @@
 .dev-findings .dfrow:last-child { margin-bottom: 0; }
 .dfrow:hover { background: var(--bg-hover); } .dfrow .t { font-size: var(--text-13); overflow-wrap: anywhere; } .dfrow .go { color: var(--text-subtle); flex: none; }
 
+/* select mode: a tick column in front, and the bar that acts on what is ticked */
+.frow.pick { grid-template-columns: 20px 80px minmax(0, 1fr) 168px 152px; cursor: pointer; }
+.frow.pick.picked { background: var(--bg-active); box-shadow: inset 0 0 0 1px var(--selection); } .frows > li:has(.picked) { z-index: 1; }
+.f-cb { width: 16px; height: 16px; margin: 0; accent-color: var(--primary); }
+.frow.pick:has(.f-cb:focus-visible) { outline: 2px solid var(--selection); outline-offset: -2px; } .f-cb:focus-visible { outline: none; }
+.th-bulk { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); max-width: 1100px; margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4); background: var(--bg-raised); box-shadow: var(--shadow-2, var(--ring)); }
+.th-bulk .check { font-size: var(--text-13); font-variant-numeric: tabular-nums; } .th-bulk .check input { width: 16px; height: 16px; }
+.th-bulk .act { height: 30px; } .th-bulk .act:disabled { color: var(--text-disabled); cursor: default; }
+.cf-sev { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.cf-list { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow: auto; padding-left: var(--space-4); list-style: disc; font-size: var(--text-13); overflow-wrap: anywhere; }
+
 /* ---------------------------------------------------------------- widths */
 @container (max-width: 860px) { .scns { grid-template-columns: 1fr; } }
 @container (max-width: 760px) {
   .frow { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "sev end" "what what" "conf conf"; gap: var(--space-2) var(--space-3); padding: var(--space-3); }
   .frow .sevc { grid-area: sev; } .frow .f-end { grid-area: end; flex-direction: row; gap: 8px; align-items: center; justify-self: end; } .frow .f-what { grid-area: what; } .frow .confw { grid-area: conf; }
+  .frow.pick { grid-template-columns: 20px auto minmax(0, 1fr); grid-template-areas: "cb sev end" ". what what" ". conf conf"; } .frow.pick .f-cb { grid-area: cb; }
   .f-title { -webkit-line-clamp: 3; line-clamp: 3; } .frow .f-where { display: none; } .frow .f-name { max-width: 100%; flex: 0 1 auto; }
 }
 @media (min-width: 1440px) {
@@ -138,6 +151,8 @@
   .app[data-verdict="threats"] .th-head .sec-title .verdict-btn { display: none; }
   .tsev { gap: var(--space-1); } .tsev-b { padding: var(--space-2); } .tsev-b b { font-size: 20px; } .tsev-b span { font-size: var(--text-11); }
   .th-tools { padding-top: var(--space-3); } .th-tools .select { min-height: 36px; flex: 1 1 0; min-width: 0; }
+  .th-bulk { padding: var(--space-2) var(--space-3); } .th-bulk .grow { flex-basis: 100%; height: 0; } .th-bulk .act, .th-bulk .btn { height: 40px; flex: 1 1 auto; justify-content: center; }
+  .f-cb { width: 20px; height: 20px; }
   .fd-acts .act { height: 40px; padding: 0 14px; font-size: var(--text-13); }
   .fd-evr { grid-template-columns: 84px minmax(0, 1fr) 36px; } .fd-evr .cp { width: 36px; height: 36px; min-height: 36px; margin-top: -8px; }
   .fd-cmd-f .btn { min-height: 44px; flex: 1 1 100%; justify-content: center; }

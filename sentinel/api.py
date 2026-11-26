@@ -253,6 +253,35 @@ def perform(engine, fid, body, audit=None):
     return {"ok": True, "finding": public(engine, rec), "result": result}
 
 
+BULK = ("acknowledge", "trust", "reopen")
+BULK_MAX = 500
+
+
+def perform_bulk(engine, body, audit=None):
+    """POST /api/threats/bulk {action, ids, confirm} → {ok, done: [finding], failed: [{id, error}]}.
+
+    Each id goes through perform(), so every finding is checked and audited on its own; one that cannot
+    take the action is reported and the rest still happen."""
+    action = body.get("action")
+    if action not in BULK:
+        raise ActionError(400, "action must be one of: %s" % ", ".join(BULK))
+    ids = body.get("ids")
+    if not isinstance(ids, list) or not ids or not all(isinstance(i, str) for i in ids):
+        raise ActionError(400, "ids must be a list of finding ids")
+    ids = list(dict.fromkeys(ids))
+    if len(ids) > BULK_MAX:
+        raise ActionError(400, "at most %d findings at a time" % BULK_MAX)
+    if action in NEED_CONFIRM and body.get("confirm") is not True:
+        raise ActionError(400, "This needs confirm: true. Show the person what will happen first.")
+    done, failed = [], []
+    for fid in ids:
+        try:
+            done.append(perform(engine, fid, {"action": action, "confirm": body.get("confirm") is True}, audit)["finding"])
+        except ActionError as e:
+            failed.append({"id": fid, "error": e.text})
+    return {"ok": not failed, "done": done, "failed": failed}
+
+
 # ---------------------------------------------------------------- reads
 
 def threats_doc(engine, state=None, severity=None, scanner=None):

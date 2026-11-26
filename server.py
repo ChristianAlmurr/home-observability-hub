@@ -517,6 +517,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, SA.start_scan(SENTINEL, body))
             except SA.ActionError as e:
                 return self._err(e.status, e.text)
+        if path == "/api/threats/bulk":
+            try:
+                return self._send(200, SA.perform_bulk(SENTINEL, body, audit))
+            except SA.ActionError as e:
+                return self._err(e.status, e.text)
         m = re.match(r"^/api/threats/([^/]+)/action$", path)
         if m:
             try:

@@ -66,6 +66,7 @@ const real = {
   threats: (params = {}) => { const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v)).toString(); return get('/api/threats' + (q ? '?' + q : '')); },
   threat: id => get('/api/threats/' + enc(id)),
   threatAction: (id, body) => request('/api/threats/' + enc(id) + '/action', { method: 'POST', body, timeout: 60000 }),
+  threatBulk: body => request('/api/threats/bulk', { method: 'POST', body, timeout: 120000 }),
   threatScan: (body = {}) => post('/api/threats/scan', body),
   routerUnblock: mac => request('/api/router/unblock', { method: 'POST', body: { mac, confirm: true }, timeout: 30000 }),
 };
